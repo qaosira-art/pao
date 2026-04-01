@@ -20,9 +20,10 @@
 body {
     font-family: var(--font-family);
     color: var(--apple-text);
-    background-color: #ffffff;
+    background-color: #f0f0f2; /* Light gutter background */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
 }
 
 /* Typography */
@@ -66,25 +67,29 @@ h1, h2, h3, h4 {
 .app-header {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 44px;
+    height: 48px;
     background-color: var(--apple-bg);
     z-index: 1000;
-    border: none; /* No black border per requirement */
+    border-bottom: 1px solid #f5f5f7;
+    max-width: 500px; /* Fixed Canva Width */
+    margin: 0 auto;
 }
 .header-container {
-    max-width: 1024px;
-    margin: 0 auto;
+    width: 100%;
     height: 100%;
     display: flex;
-    justify-content: center; /* Center the nav */
+    justify-content: flex-start; /* Align menu from left */
     align-items: center;
     position: relative;
-    padding: 0 15px;
+    padding: 0 10px;
 }
 .header-nav-center {
     display: flex;
     align-items: center;
-    gap: 30px; /* Desktop gap */
+    gap: 12px; /* Uniform gap */
+    width: 100%;
+    flex-direction: row !important; /* Always row */
+    flex-wrap: nowrap;
 }
 .header-right-actions {
     position: absolute;
@@ -162,9 +167,12 @@ h1, h2, h3, h4 {
 #app { padding: 20px; }
 .view {
     animation: fadeIn 0.3s ease;
-    max-width: 1024px;
+    max-width: 500px; /* Locked Width */
     margin: 0 auto;
-    padding-top: 70px; /* Exact Canva Spacing */
+    padding-top: 70px; /* Spacing from header */
+    background-color: #ffffff; /* Content should stay white */
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05); /* Subtle border shadow on desktop */
 }
 
 @keyframes fadeIn {
@@ -173,16 +181,18 @@ h1, h2, h3, h4 {
 }
 
 .welcome-title {
-    font-size: 3rem;
+    font-size: 26px; /* Exact Canva Size Global */
     font-weight: 700;
-    margin-bottom: 15px;
-    margin-top: 40px;
+    margin-bottom: 12px;
+    margin-top: 20px;
+    text-align: center; /* Always centered */
 }
 .welcome-subtitle {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: var(--apple-gray);
     font-weight: 400;
-    margin-bottom: 25px; /* Reduced to match screenshot */
+    margin-bottom: 30px;
+    text-align: center; /* Always centered */
 }
 
 /* Forms */
@@ -312,99 +322,11 @@ h1, h2, h3, h4 {
 .choice-row input[type="text"] { flex-grow: 1; }
 
 /* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .app-header {
-        height: 48px;
-        border-bottom: 1px solid #f5f5f7;
-    }
-    .header-container {
-        justify-content: flex-start;
-        padding: 0 10px;
-    }
-    #nav-logo {
-        margin-right: 12px !important;
-        position: static !important; /* Force static flow */
-    }
-    .logo-img {
-        height: 28px !important;
-    }
-    .header-nav-center {
-        display: flex;
-        flex-direction: row !important;
-        gap: 12px;
-        justify-content: flex-start;
-        width: auto;
-    }
-    .header-nav-center .nav-item {
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .view {
-        padding-top: 60px; /* Spacing below header */
-    }
-
-    .welcome-title {
-        font-size: 26px; /* Exact Canva Size */
-        font-weight: 700;
-        margin-bottom: 12px;
-        text-align: center;
-        color: #000;
-        margin-top: 0;
-    }
-    .welcome-subtitle {
-        font-size: 14px; /* Exact Canva Size */
-        color: #86868b;
-        margin-bottom: 30px;
-        text-align: center;
-    }
-    
-    .slider-wrapper {
-        max-width: 320px; /* Fit 375px viewport with margins */
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .slider-container {
-        height: 240px; /* Proportional match */
-        border-radius: 20px;
-        width: 100%;
-    }
-    .slider-dots {
-        margin-top: 12px;
-    }
-
-    .panel, .login-card-modern, .contact-card {
-        border-radius: 20px;
-        border: 1px solid #f2f2f2;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        width: 90%;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .btn {
-        padding: 12px 20px;
-        font-size: 15px;
+/* Mobile/Desktop Global Proportions are now identical (Max-width 500px) */
+@media (max-width: 500px) {
+    .view, .app-header {
+        max-width: 100%;
+        box-shadow: none; /* No shadow on real mobile */
     }
 }
 
-
-
-    /* Table Responsiveness */
-    .data-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Advisor Filters */
-    #view-advisor .panel[style*="display: flex"] {
-        flex-direction: column;
-        gap: 10px !important;
-    }
-    #view-advisor select, #view-advisor input {
-        width: 100% !important;
-    }
-}
