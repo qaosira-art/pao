@@ -7,7 +7,7 @@
     --apple-gray: #86868b;
     --apple-light-gray: #f5f5f7;
     --apple-danger: #ff3b30;
-    --apple-radius: 18px; /* Curved edges like Canva */
+    --apple-radius: 20px; /* Exact Canva Match */
     --font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -164,7 +164,7 @@ h1, h2, h3, h4 {
     animation: fadeIn 0.3s ease;
     max-width: 1024px;
     margin: 0 auto;
-    padding-top: 40px;
+    padding-top: 70px; /* Exact Canva Spacing */
 }
 
 @keyframes fadeIn {
@@ -313,56 +313,82 @@ h1, h2, h3, h4 {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    .app-header {
+        height: 48px;
+        border-bottom: 1px solid #f5f5f7;
+    }
+    .header-container {
+        justify-content: flex-start;
+        padding: 0 10px;
+    }
     #nav-logo {
-        margin-right: 10px !important;
-        margin-right: 15px !important;
+        margin-right: 12px !important;
+        position: static !important; /* Force static flow */
     }
     .logo-img {
-        height: 32px !important;
+        height: 28px !important;
     }
     .header-nav-center {
-        gap: 15px;
-        justify-content: center;
-        width: 100%;
+        display: flex;
+        flex-direction: row !important;
+        gap: 12px;
+        justify-content: flex-start;
+        width: auto;
     }
     .header-nav-center .nav-item {
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: 600;
         white-space: nowrap;
     }
 
+    .view {
+        padding-top: 60px; /* Spacing below header */
+    }
+
     .welcome-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 10px;
+        font-size: 26px; /* Exact Canva Size */
+        font-weight: 700;
+        margin-bottom: 12px;
         text-align: center;
+        color: #000;
+        margin-top: 0;
     }
     .welcome-subtitle {
-        font-size: 0.95rem;
+        font-size: 14px; /* Exact Canva Size */
+        color: #86868b;
         margin-bottom: 30px;
         text-align: center;
     }
-    .slider-container {
-        height: 360px;
-        border-radius: 20px;
-    }
+    
     .slider-wrapper {
-        padding: 0 10px;
-        margin-top: 10px;
+        max-width: 320px; /* Fit 375px viewport with margins */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .slider-container {
+        height: 240px; /* Proportional match */
+        border-radius: 20px;
+        width: 100%;
     }
     .slider-dots {
-        margin-top: 15px;
+        margin-top: 12px;
     }
 
-    .admin-layout {
-        flex-direction: column;
-    }
     .panel, .login-card-modern, .contact-card {
         border-radius: 20px;
-        border: 1px solid #eee;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-        width: 92%;
+        border: 1px solid #f2f2f2;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
     }
+
+    .btn {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+}
+
 
 
     /* Table Responsiveness */
