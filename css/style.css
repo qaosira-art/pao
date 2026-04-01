@@ -7,6 +7,7 @@
     --apple-gray: #86868b;
     --apple-light-gray: #f5f5f7;
     --apple-danger: #ff3b30;
+    --apple-radius: 18px; /* Curved edges like Canva */
     --font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -39,7 +40,7 @@ h1, h2, h3, h4 {
 .btn {
     display: inline-block;
     padding: 8px 16px;
-    border-radius: 980px; /* Pillow shape for Apple feel */
+    border-radius: var(--apple-radius); /* Use global radius */
     font-size: 14px;
     font-weight: 400;
     text-align: center;
@@ -109,13 +110,13 @@ h1, h2, h3, h4 {
     position: relative;
     max-width: 800px;
     margin: 20px auto;
-    border-radius: 16px;
+    border-radius: var(--apple-radius);
 }
 .slider-container {
     position: relative;
     height: 500px;
     background: transparent;
-    border-radius: 16px;
+    border-radius: var(--apple-radius);
     overflow: hidden;
 }
 .slide {
@@ -125,7 +126,7 @@ h1, h2, h3, h4 {
     object-fit: cover;
     opacity: 0;
     transition: opacity 0.8s ease-in-out;
-    border-radius: 16px;
+    border-radius: var(--apple-radius);
 }
 .slide.active { opacity: 1; }
 .slider-dots {
@@ -191,7 +192,7 @@ h1, h2, h3, h4 {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #d2d2d7;
-    border-radius: 8px;
+    border-radius: 12px; /* Rounded inputs like Canva */
     font-size: 14px;
     font-family: inherit;
     outline: none;
@@ -279,7 +280,7 @@ h1, h2, h3, h4 {
 /* Modern Admin Login Match Screenshot */
 .login-card-modern {
     max-width: 400px; margin: 80px auto; padding: 40px;
-    background: white; border-radius: 12px;
+    background: white; border-radius: var(--apple-radius);
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     border: 1px solid #e5e5ea;
     text-align: center;
@@ -312,70 +313,55 @@ h1, h2, h3, h4 {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    #nav-logo {
+        margin-right: 10px !important;
+    }
+    .logo-img {
+        height: 28px !important;
+    }
     .header-nav-center {
-        gap: 15px;
+        gap: 12px;
+        justify-content: flex-start;
     }
     .header-nav-center .nav-item {
         font-size: 11px;
-    }
-    #nav-logo {
-        margin-right: 5px !important;
-    }
-    .logo-img {
-        height: 24px !important;
+        white-space: nowrap;
     }
 
     .welcome-title {
-        font-size: 2rem;
+        font-size: 2.2rem;
         margin-top: 20px;
+        text-align: center;
     }
     .welcome-subtitle {
         font-size: 1rem;
         margin-bottom: 20px;
+        text-align: center;
     }
     .slider-container {
-        height: 250px;
+        height: 380px; /* More vertical for mobile */
+        border-radius: var(--apple-radius);
+    }
+    .slider-wrapper {
+        padding: 0 15px;
     }
 
     .admin-layout {
         flex-direction: column;
     }
-    .admin-sidebar {
-        width: 100%;
-        border-right: none !important;
-        border-bottom: 1px solid #e5e5ea;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-    }
-    .admin-menu {
-        display: flex;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        gap: 8px;
-    }
-    .admin-menu-item {
-        flex-shrink: 0;
-        white-space: nowrap;
-        padding: 8px 12px;
-        font-size: 12px;
-    }
-    .admin-menu-item::before {
-        margin-right: 6px;
-    }
-
-    .flex-row {
-        flex-direction: column;
-    }
     .panel {
         width: 100%;
         padding: 16px;
+        border-radius: var(--apple-radius);
     }
 
-    .contact-card {
+    .login-card-modern, .contact-card {
         margin: 40px auto;
         padding: 30px 20px;
-        width: 95%;
+        width: 90%;
+        border-radius: var(--apple-radius);
     }
+
 
     /* Table Responsiveness */
     .data-table {
