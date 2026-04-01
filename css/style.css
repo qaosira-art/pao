@@ -84,7 +84,7 @@ h1, h2, h3, h4 {
 .header-nav-center {
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 30px; /* Desktop gap */
 }
 .header-right-actions {
     position: absolute;
@@ -182,7 +182,7 @@ h1, h2, h3, h4 {
     font-size: 1.1rem;
     color: var(--apple-gray);
     font-weight: 400;
-    margin-bottom: 40px;
+    margin-bottom: 25px; /* Reduced to match screenshot */
 }
 
 /* Forms */
@@ -315,51 +315,53 @@ h1, h2, h3, h4 {
 @media (max-width: 768px) {
     #nav-logo {
         margin-right: 10px !important;
+        margin-right: 15px !important;
     }
     .logo-img {
-        height: 28px !important;
+        height: 32px !important;
     }
     .header-nav-center {
-        gap: 12px;
-        justify-content: flex-start;
+        gap: 15px;
+        justify-content: center;
+        width: 100%;
     }
     .header-nav-center .nav-item {
-        font-size: 11px;
+        font-size: 13px;
+        font-weight: 500;
         white-space: nowrap;
     }
 
     .welcome-title {
         font-size: 2.2rem;
-        margin-top: 20px;
+        font-weight: 800;
+        margin-bottom: 10px;
         text-align: center;
     }
     .welcome-subtitle {
-        font-size: 1rem;
-        margin-bottom: 20px;
+        font-size: 0.95rem;
+        margin-bottom: 30px;
         text-align: center;
     }
     .slider-container {
-        height: 380px; /* More vertical for mobile */
-        border-radius: var(--apple-radius);
+        height: 360px;
+        border-radius: 20px;
     }
     .slider-wrapper {
-        padding: 0 15px;
+        padding: 0 10px;
+        margin-top: 10px;
+    }
+    .slider-dots {
+        margin-top: 15px;
     }
 
     .admin-layout {
         flex-direction: column;
     }
-    .panel {
-        width: 100%;
-        padding: 16px;
-        border-radius: var(--apple-radius);
-    }
-
-    .login-card-modern, .contact-card {
-        margin: 40px auto;
-        padding: 30px 20px;
-        width: 90%;
-        border-radius: var(--apple-radius);
+    .panel, .login-card-modern, .contact-card {
+        border-radius: 20px;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        width: 92%;
     }
 
 
