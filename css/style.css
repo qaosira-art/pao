@@ -220,8 +220,10 @@ h1, h2, h3, h4 {
 .admin-layout { 
     display: flex; 
     gap: 30px; 
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    flex-wrap: nowrap; /* Desktop: Prevent wrapping below sidebar */
+    align-items: flex-start;
 }
+.admin-content { flex: 1; min-width: 0; } /* Allow content to shrink if needed */
 .admin-sidebar { 
     width: 200px; 
     flex-shrink: 0; 

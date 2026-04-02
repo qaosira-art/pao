@@ -77,7 +77,11 @@ const Store = {
                     if (idx > -1) this.cache[table].splice(idx, 1);
                 }
                 
-                this.cache[table].sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+                this.cache[table].sort((a, b) => {
+                    const da = new Date(a.created_at || a.date || 0);
+                    const db = new Date(b.created_at || b.date || 0);
+                    return da - db;
+                });
                 this.refreshUI(table);
             })
             .subscribe((status, err) => {
@@ -112,7 +116,11 @@ const Store = {
         if (exists) return { success: false, error: 'duplicate' };
         
         const tempId = crypto.randomUUID();
-        const data = { id: tempId, name };
+        const data = { 
+            id: tempId, 
+            name,
+            created_at: new Date().toISOString() 
+        };
         this.cache.rooms.push(data);
 
         const { error } = await this.supabase.from('rooms').insert([data]);
@@ -143,7 +151,13 @@ const Store = {
     async addSubject(name, year) {
         if(!this.isReady) return { success: false, error: 'Store not initialized' };
         const tempId = crypto.randomUUID();
-        const data = { id: tempId, name, year, isOpen: false };
+        const data = { 
+            id: tempId, 
+            name, 
+            year, 
+            isOpen: false,
+            created_at: new Date().toISOString()
+        };
         this.cache.subjects.push(data);
         const { error } = await this.supabase.from('subjects').insert([data]);
         if (error) {
@@ -198,7 +212,8 @@ const Store = {
             firstName: firstName,
             lastName: lastName,
             isEligible: true,
-            profilePicture: null
+            profilePicture: null,
+            created_at: new Date().toISOString()
         };
         this.cache.students.push(data);
         const { error } = await this.supabase.from('students').insert([data]);
@@ -267,7 +282,8 @@ const Store = {
             subjectId: subjectId,
             questionText: questionText,
             choices: choices,
-            correctIndex: parseInt(correctIndex)
+            correctIndex: parseInt(correctIndex),
+            created_at: new Date().toISOString()
         };
         this.cache.exams.push(data);
         const { error } = await this.supabase.from('exams').insert([data]);

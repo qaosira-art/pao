@@ -159,17 +159,7 @@ const StudentPortal = {
         if (fRoom) students = students.filter(s => s.room.toString() === fRoom);
         if (fName) students = students.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(fName));
 
-        // Sort: Year -> Room -> Name
-        students.sort((a, b) => {
-            const yearA = parseInt(a.year) || 0;
-            const yearB = parseInt(b.year) || 0;
-            if (yearA !== yearB) return yearA - yearB;
-            
-            const roomCompare = a.room.localeCompare(b.room, 'th', { numeric: true });
-            if (roomCompare !== 0) return roomCompare;
-            
-            return a.firstName.localeCompare(b.firstName, 'th');
-        });
+        // Students are kept in chronological order from Store
 
         // Pagination logic
         const totalItems = students.length;
@@ -289,7 +279,8 @@ const StudentPortal = {
         }
 
         const subjects = Store.getSubjects();
-        const availableSubs = subjects.filter(s => s.year === user.year).sort((a, b) => a.name.localeCompare(b.name, 'th'));
+        const availableSubs = subjects.filter(s => s.year === user.year);
+        // Kept in chronological order from Store
         
         const listEl = document.getElementById('student-exams-list');
         listEl.innerHTML = '';

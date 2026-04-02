@@ -173,22 +173,23 @@ const AdminPortal = {
 
     // Rendering Data
     renderRooms() {
-        const rooms = Store.getRooms().sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+        const rooms = Store.getRooms();
         
         const countSpan = document.getElementById('room-count');
         if (countSpan) countSpan.innerText = rooms.length;
         
-        const listContainer = document.getElementById('room-list-container');
-        if (listContainer) {
-            listContainer.innerHTML = '';
+        const tbody = document.getElementById('room-table-body');
+        if (tbody) {
+            tbody.innerHTML = '';
             rooms.forEach(r => {
-                const div = document.createElement('div');
-                div.style.cssText = 'background: #f5f5f7; border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1d1d1f; font-size: 14px;';
-                div.innerHTML = `
-                    <span>${r}</span>
-                    <button class="delete-room-btn" data-id="${r}" style="background: #ff3b30; color: white; border: none; padding: 4px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">ลบ</button>
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 12px 16px; border-bottom: 1px solid #f5f5f7;">${r}</td>
+                    <td style="padding: 12px 16px; border-bottom: 1px solid #f5f5f7;">
+                        <button class="delete-room-btn btn" data-id="${r}" style="background: #ff3b30; color: white; border: none; padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">ลบ</button>
+                    </td>
                 `;
-                listContainer.appendChild(div);
+                tbody.appendChild(tr);
             });
         }
 
@@ -214,12 +215,7 @@ const AdminPortal = {
     },
 
     renderSubjects() {
-        const subjects = Store.getSubjects().sort((a, b) => {
-            const yearA = parseInt(a.year) || 0;
-            const yearB = parseInt(b.year) || 0;
-            if (yearA !== yearB) return yearA - yearB;
-            return a.name.localeCompare(b.name, 'th');
-        });
+        const subjects = Store.getSubjects();
         const tbody = document.getElementById('subject-table-body');
         tbody.innerHTML = '';
         
@@ -359,17 +355,7 @@ const AdminPortal = {
             );
         }
 
-        // Sort students: Year -> Room -> Name
-        filtered.sort((a, b) => {
-            const yearA = parseInt(a.year) || 0;
-            const yearB = parseInt(b.year) || 0;
-            if (yearA !== yearB) return yearA - yearB;
-            
-            const roomCompare = a.room.localeCompare(b.room, 'th', { numeric: true });
-            if (roomCompare !== 0) return roomCompare;
-            
-            return a.firstName.localeCompare(b.firstName, 'th');
-        });
+        // Students are kept in chronological order from Store
 
         document.getElementById('stu-count').innerText = filtered.length;
 

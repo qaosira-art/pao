@@ -183,24 +183,32 @@
                         </div>
                     </div>
 
-                    <!-- Tab: Manage Rooms -->
                     <div id="admin-rooms" class="admin-tab hidden">
-                        <h2 style="font-size: 22px; margin-bottom: 24px;">จัดการห้องเรียน</h2>
-                        
-                        <!-- Panel: Add Room -->
-                        <div class="panel mb-4" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 16px; font-size: 16px; color: #1d1d1f; font-weight: 600;">เพิ่มห้องเรียน</h3>
-                            <form id="form-add-room" style="display: flex; gap: 12px; align-items: center;">
-                                <input type="text" id="room-name" placeholder="เช่น 1/1" required style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; flex-shrink: 0; width: 200px; font-family: inherit; font-size: 14px;">
-                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">เพิ่มห้อง</button>
-                            </form>
+                        <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 24px;">
+                            <h2 style="font-size: 22px; margin: 0;">จัดการห้องเรียน</h2>
                         </div>
                         
-                        <!-- Panel: Room List -->
-                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px;">
-                            <h3 style="margin-bottom: 20px; font-size: 16px; color: #1d1d1f; font-weight: 600;">ห้องเรียนทั้งหมด (<span id="room-count">0</span>)</h3>
-                            <div id="room-list-container" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                <!-- Rooms render here as pills -->
+                        <!-- Panel: Room List with Integrated Add Form -->
+                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; padding: 24px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
+                                <h3 style="font-size: 16px; color: #1d1d1f; font-weight: 600; margin: 0;">ห้องเรียนทั้งหมด (<span id="room-count">0</span>)</h3>
+                                <form id="form-add-room" style="display: flex; gap: 12px; align-items: center;">
+                                    <input type="text" id="room-name" placeholder="เช่น 1/1" required style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; width: 180px; font-family: inherit; font-size: 14px;">
+                                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;">+ เพิ่มห้องเรียน</button>
+                                </form>
+                            </div>
+                            <div style="margin-top: 0; overflow: hidden;">
+                                <table class="data-table clean-table" style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: #f5f5f7;">
+                                            <th style="color: var(--apple-gray); font-weight: 500;">ชื่อห้องเรียน</th>
+                                            <th style="color: var(--apple-gray); font-weight: 500; width: 100px;">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="room-table-body">
+                                        <!-- Rooms render here -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
