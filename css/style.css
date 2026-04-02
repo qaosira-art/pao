@@ -8,7 +8,7 @@
     --apple-light-gray: #f5f5f7;
     --apple-danger: #ff3b30;
     --apple-radius: 20px; /* Exact Canva Match */
-    --font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-family: 'Noto Sans Thai', sans-serif;
 }
 
 * {
@@ -17,13 +17,17 @@
     padding: 0;
 }
 
-body {
+html, body {
+    background-color: #ffffff !important;
     font-family: var(--font-family);
     color: var(--apple-text);
-    background-color: #f0f0f2; /* Light gutter background */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* Typography */
@@ -67,29 +71,25 @@ h1, h2, h3, h4 {
 .app-header {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 48px;
-    background-color: var(--apple-bg);
+    height: 44px;
+    background-color: rgb(245, 245, 247);
     z-index: 1000;
-    border-bottom: 1px solid #f5f5f7;
-    max-width: 500px; /* Fixed Canva Width */
-    margin: 0 auto;
+    border: none;
 }
 .header-container {
-    width: 100%;
+    max-width: 1024px;
+    margin: 0 auto;
     height: 100%;
     display: flex;
-    justify-content: flex-start; /* Align menu from left */
+    justify-content: center;
     align-items: center;
     position: relative;
-    padding: 0 10px;
+    padding: 0 15px;
 }
 .header-nav-center {
     display: flex;
     align-items: center;
-    gap: 12px; /* Uniform gap */
-    width: 100%;
-    flex-direction: row !important; /* Always row */
-    flex-wrap: nowrap;
+    gap: 30px;
 }
 .header-right-actions {
     position: absolute;
@@ -99,13 +99,13 @@ h1, h2, h3, h4 {
 }
 .nav-item {
     text-decoration: none;
-    color: var(--apple-text);
-    font-size: 13px;
-    font-weight: bold; /* Bold requested */
+    color: #000000;
+    font-size: 14px;
+    font-weight: bold;
     transition: opacity 0.2s;
 }
 .nav-item:hover { opacity: 0.7; }
-.logo-img { height: 20px; vertical-align: middle; }
+.logo-img { height: 30px; vertical-align: middle; }
 .nav-btn {
     text-decoration: none; font-size: 12px; color: var(--apple-blue); font-weight: 500; margin-left: 10px;
 }
@@ -119,7 +119,9 @@ h1, h2, h3, h4 {
 }
 .slider-container {
     position: relative;
-    height: 500px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 500px;
     background: transparent;
     border-radius: var(--apple-radius);
     overflow: hidden;
@@ -163,17 +165,13 @@ h1, h2, h3, h4 {
 .contact-address { font-size: 14px; color: var(--apple-gray); margin-bottom: 15px; }
 .contact-phone { font-size: 16px; font-weight: 600; color: var(--apple-blue); }
 
-/* Views / Layout */
-#app { padding: 20px; }
 .view {
     animation: fadeIn 0.3s ease;
-    max-width: 500px; /* Locked Width */
+    max-width: 1024px;
     margin: 0 auto;
-    padding-top: 70px; /* Spacing from header */
-    background-color: #ffffff; /* Content should stay white */
-    min-height: 100vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.05); /* Subtle border shadow on desktop */
+    padding-top: 40px;
 }
+#app { padding: 0; } /* Remove container padding for true edge-to-edge */
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -181,18 +179,16 @@ h1, h2, h3, h4 {
 }
 
 .welcome-title {
-    font-size: 26px; /* Exact Canva Size Global */
+    font-size: 3rem;
     font-weight: 700;
-    margin-bottom: 12px;
-    margin-top: 20px;
-    text-align: center; /* Always centered */
+    margin-bottom: 15px;
+    margin-top: 40px;
 }
 .welcome-subtitle {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     color: var(--apple-gray);
     font-weight: 400;
-    margin-bottom: 30px;
-    text-align: center; /* Always centered */
+    margin-bottom: 40px;
 }
 
 /* Forms */
@@ -221,16 +217,30 @@ h1, h2, h3, h4 {
 .flex-inline-vertical { display: flex; gap: 10px; align-items: center; }
 
 /* Admin Panel */
-.admin-layout { display: flex; gap: 30px; }
+.admin-layout { 
+    display: flex; 
+    gap: 30px; 
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
 .admin-sidebar { 
-    width: 220px; 
+    width: 200px; 
     flex-shrink: 0; 
     display: flex; 
     flex-direction: column; 
-    justify-content: space-between; 
-    min-height: 70vh; 
+    justify-content: flex-start; 
     border-right: 1px solid #e5e5ea; 
     padding-right: 20px;
+}
+
+@media (max-width: 768px) {
+    .admin-layout { flex-direction: column; gap: 20px; }
+    .admin-sidebar { 
+        width: 100%; 
+        border-right: none; 
+        border-bottom: 1px solid #e5e5ea; 
+        padding-right: 0; 
+        padding-bottom: 20px;
+    }
 }
 .admin-menu { list-style: none; }
 .admin-menu-item {
@@ -321,12 +331,175 @@ h1, h2, h3, h4 {
 .choice-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .choice-row input[type="text"] { flex-grow: 1; }
 
-/* Mobile Responsiveness */
-/* Mobile/Desktop Global Proportions are now identical (Max-width 500px) */
-@media (max-width: 500px) {
-    .view, .app-header {
-        max-width: 100%;
-        box-shadow: none; /* No shadow on real mobile */
-    }
+/* Student & Advisor & Admin Login & Contact Portal Refinement - Global Layout */
+.student-filter-container {
+    display: flex;
+    flex-direction: row; /* Desktop: Row layout */
+    gap: 12px;
+    margin-bottom: 20px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
+.filter-dropdown-row {
+    display: flex;
+    flex: 2; /* Occupies 2 units of space (for 2 dropdowns) */
+    gap: 10px;
+}
+.filter-select {
+    flex: 1;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #d2d2d7;
+    background: white;
+    font-size: 14px;
+    appearance: auto;
+    color: #1d1d1f;
+}
+.filter-search {
+    flex: 1; /* Occupies 1 unit of space */
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid #d2d2d7;
+    font-size: 14px;
+    color: #1d1d1f;
+}
+#adv-filter-subject {
+    flex: 1; /* Subject dropdown gets 1 unit too */
+}
+.filter-search::placeholder { color: #86868b; }
 
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .header-nav-center {
+        gap: 15px;
+    }
+    .header-nav-center .nav-item {
+        font-size: 11px;
+    }
+    #nav-logo {
+        margin-right: 5px !important;
+    }
+    .logo-img {
+        height: 24px !important;
+    }
+
+    .welcome-title {
+        font-size: 2rem;
+        margin-top: 20px;
+        text-align: center;
+    }
+    .welcome-subtitle {
+        font-size: 1rem;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .slider-container {
+        height: 250px;
+    }
+
+    .admin-layout {
+        flex-direction: column;
+    }
+    .admin-sidebar {
+        width: 100%;
+        border-right: none !important;
+        border-bottom: 1px solid #e5e5ea;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+    .panel {
+        width: 100%;
+        padding: 16px;
+    }
+
+    /* Student & Advisor & Admin Login & Contact Portal Refinement - Exact Canva/Screenshot Match */
+    .student-login-card, .login-card-modern, .contact-card {
+        max-width: 92% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-top: 40px !important;
+        margin-bottom: 24px !important;
+        border-radius: 20px !important;
+        border: 1px solid #f0f0f2 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+        padding: 24px 16px !important; /* Adjusted padding */
+    }
+    .student-filter-container {
+        flex-direction: column !important; /* Stack on mobile */
+        max-width: 100% !important;
+    }
+    .filter-dropdown-row {
+        flex: none !important;
+        width: 100% !important;
+    }
+    .filter-search {
+        flex: none !important;
+        width: 100% !important;
+    }
+    #adv-filter-subject {
+        flex: none !important;
+        width: 100% !important;
+    }
+
+    /* Student Dashboard, Exam Prep & Exam Room Mobile Refinement - Margin from edges */
+    #view-student-dashboard > div, #view-exam-prep > div, #view-exam-room > div {
+        max-width: 92% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        width: 92% !important;
+    }
+    #view-student-dashboard h3, #view-exam-prep h3, #view-exam-room h2 {
+        margin-left: 4% !important; 
+    }
+
+    .student-table thead tr {
+        background: #f5f5f7 !important;
+    }
+    .student-table th {
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6e6e73;
+        border-bottom: none !important;
+    }
+    .student-table td {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+        color: #1d1d1f !important;
+        border-bottom: 1px solid #f5f5f7 !important;
+    }
+    .btn-select-student {
+        border-radius: 8px !important; /* Match Screenshot Button Shape */
+        padding: 6px 16px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        background-color: #0071e3 !important;
+    }
+
+    /* Advisor Portal Table Refinement - Fit to screen */
+    #advisor-data-table {
+        table-layout: auto;
+        width: 100%;
+        margin-top: 0;
+    }
+    #advisor-data-table th, #advisor-data-table td {
+        padding: 8px 4px !important;
+        font-size: 11px !important; /* Slightly larger as requested */
+        word-wrap: break-word;
+        vertical-align: middle;
+        text-align: center; /* Center by default for balance */
+    }
+    #advisor-data-table th:nth-child(3), #advisor-data-table td:nth-child(3) {
+        text-align: left; /* Keep names left-aligned for better reading */
+    }
+    #advisor-data-table .badge {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+    /* Fixed Column Widths for Balance */
+    #advisor-data-table th:nth-child(1), #advisor-data-table td:nth-child(1) { width: 40px; } /* ปี */
+    #advisor-data-table th:nth-child(2), #advisor-data-table td:nth-child(2) { width: 48px; } /* ห้อง */
+    #advisor-data-table th:nth-child(4), #advisor-data-table td:nth-child(4) { width: 65px; } /* สิทธิ์ */
+    #advisor-data-table th:nth-child(5), #advisor-data-table td:nth-child(5) { width: 45px; } /* คะแนน/วิชา */
+}

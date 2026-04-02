@@ -6,8 +6,16 @@
     <title>ระบบการจัดการศึกษา - วิทยาลัยเทคโนโลยีนนทบุรี</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <style>
+        :root {
+            --font-family: 'Noto Sans Thai', sans-serif;
+        }
+        body {
+            font-family: var(--font-family);
+        }
+    </style>
 </head>
 <body>
     <!-- Global Header (Fixed at top) -->
@@ -16,9 +24,9 @@
             
             <!-- Center: Navigation & Logo -->
             <nav class="header-nav-center">
-                <a href="#" id="nav-logo" class="logo-link">
-                <img src="https://cmzbbigtowewhdnvmasr.supabase.co/storage/v1/object/public/uploads/f876274e-5e7e-4638-b7c8-380ff6f08ca7/462557434_122103859664619717_4413156820542385153_n.png" class="logo-img">
-            </a>
+                <a href="#" id="nav-logo" class="logo-link" style="display: flex; align-items: center; margin-right: 15px;">
+                    <img src="https://i.ibb.co/Tq2NHPvy/image.png" alt="โลโก้ นนทบุรี" class="logo-img" style="height: 30px;">
+                </a>
                 <a href="#" id="menu-student" class="nav-item">ผู้สอบ</a>
                 <a href="#" id="menu-advisor" class="nav-item">ที่ปรึกษา</a>
                 <a href="#" id="menu-admin" class="nav-item">Admin</a>
@@ -292,29 +300,31 @@
 
         <!-- View: Student Portal Selection -->
         <section id="view-student-login" class="view hidden" style="max-width: 800px; margin: 0 auto; padding-top: 20px;">
-            <div style="margin-bottom: 24px;">
-                <h2 style="font-size: 24px; text-align: center;">ผู้สอบ</h2>
+            <div style="margin-bottom: 24px; padding: 0 16px;">
+                <h2 style="font-size: 24px; text-align: left; font-weight: 700;">ผู้สอบ</h2>
             </div>
             
-            <div class="panel" style="margin-bottom: 24px; border: 1px solid #e5e5ea; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 20px; border-radius: 12px;">
-                <div style="display: flex; gap: 16px; margin-bottom: 20px;">
-                    <select id="stu-filter-year" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; width: 120px; background: white; appearance: auto;">
-                        <option value="">ชั้นปี</option>
-                    </select>
-                    <select id="stu-filter-room" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; width: 120px; background: white; appearance: auto;">
-                        <option value="">ห้อง</option>
-                    </select>
-                    <input type="text" id="stu-filter-name" placeholder="ค้นหาชื่อ - นามสกุล" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; flex-grow: 1;">
+            <div class="panel student-login-card">
+                <div class="student-filter-container">
+                    <div class="filter-dropdown-row">
+                        <select id="stu-filter-year" class="filter-select">
+                            <option value="">ชั้นปี</option>
+                        </select>
+                        <select id="stu-filter-room" class="filter-select">
+                            <option value="">ห้อง</option>
+                        </select>
+                    </div>
+                    <input type="text" id="stu-filter-name" placeholder="ค้นหาชื่อ - นามสกุล" class="filter-search">
                 </div>
                 
-                <div style="overflow-x: auto; width: 100%;">
-                    <table class="data-table" style="margin-top: 0;">
-                        <thead style="background: #f5f5f7;">
+                <div class="table-responsive">
+                    <table class="data-table student-table">
+                        <thead>
                             <tr>
-                                <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ชั้นปี</th>
-                                <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ห้อง</th>
-                                <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ชื่อ - นามสกุล</th>
-                                <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500; text-align: right;"></th>
+                                <th>ชั้นปี</th>
+                                <th>ห้อง</th>
+                                <th>ชื่อ - นามสกุล</th>
+                                <th style="text-align: right;"></th>
                             </tr>
                         </thead>
                         <tbody id="stu-login-table-body">
@@ -323,7 +333,7 @@
                     </table>
                 </div>
                 <!-- Pagination -->
-                <div id="stu-login-pagination" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 20px;"></div>
+                <div id="stu-login-pagination" class="pagination-container"></div>
             </div>
         </section>
 
@@ -425,7 +435,7 @@
 
         <!-- View: Advisor Login -->
         <section id="view-advisor-login" class="view hidden">
-            <div class="login-card-modern">
+            <div class="panel login-card-modern student-login-card">
                 <div class="login-icon">
                     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" fill="#f0f7ff" stroke="#0077ed"/>
@@ -434,45 +444,46 @@
                         <path d="M16 3.13a4 4 0 010 7.75" stroke="#0077ed"/>
                     </svg>
                 </div>
-                <h2>เข้าสู่ระบบที่ปรึกษา</h2>
+                <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #000;">เข้าสู่ระบบที่ปรึกษา</h2>
                 <p class="login-subtitle">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p>
                 
                 <form id="advisor-login-form">
                     <div class="form-group">
                         <label for="advisor-password">รหัสผ่าน</label>
-                        <input type="password" id="advisor-password" placeholder="กรุณากรอกรหัสผ่าน">
+                        <input type="password" id="advisor-password" placeholder="กรุณากรอกรหัสผ่าน" class="filter-search" style="height: 48px;">
                     </div>
                     <p id="advisor-login-error" class="error-msg hidden">รหัสผ่านไม่ถูกต้อง</p>
-                    <button type="submit" class="btn btn-primary w-100 btn-login">เข้าสู่ระบบ</button>
+                    <button type="submit" class="btn btn-primary w-100 btn-login" style="border-radius: 8px; height: 48px;">เข้าสู่ระบบ</button>
                 </form>
             </div>
         </section>
 
         <!-- View: Advisor Portal -->
         <section id="view-advisor" class="view hidden" style="max-width: 800px; margin: 0 auto; padding-top: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h2 style="font-size: 24px;">ที่ปรึกษา</h2>
-                <button id="btn-advisor-back" class="btn" style="background: #f5f5f7; color: #1d1d1f; border-radius: 8px; font-weight: 600; font-size: 14px; padding: 8px 16px;">
-                    &larr; กลับหน้าหลัก
-                </button>
+            <div style="margin-bottom: 24px; padding: 0 16px;">
+                <h2 style="font-size: 24px; text-align: left; font-weight: 700;">ที่ปรึกษา</h2>
             </div>
             
-            <div class="panel" style="margin-bottom: 24px; border: 1px solid #e5e5ea; box-shadow: none; padding: 20px; border-radius: 12px; display: flex; gap: 16px;">
-                <select id="adv-filter-year" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; width: 120px; background: white; appearance: auto;">
-                    <option value="">ชั้นปี</option>
-                </select>
-                <select id="adv-filter-room" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; width: 120px; background: white; appearance: auto;">
-                    <option value="">ห้อง</option>
-                </select>
-                <select id="adv-filter-subject" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; width: 200px; background: white; appearance: auto;">
-                    <option value="">-- เลือกวิชา (จำเป็น) --</option>
-                </select>
-                <input type="text" id="adv-filter-name" placeholder="ค้นหาชื่อ" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; font-family: inherit; font-size: 14px; flex-grow: 1;">
+            <div class="panel student-login-card">
+                <div class="student-filter-container">
+                    <div class="filter-dropdown-row">
+                        <select id="adv-filter-year" class="filter-select">
+                            <option value="">ชั้นปี</option>
+                        </select>
+                        <select id="adv-filter-room" class="filter-select">
+                            <option value="">ห้อง</option>
+                        </select>
+                    </div>
+                    <select id="adv-filter-subject" class="filter-select" style="width: 100%;">
+                        <option value="">-- เลือกวิชา (จำเป็น) --</option>
+                    </select>
+                    <input type="text" id="adv-filter-name" placeholder="ค้นหาชื่อ" class="filter-search">
+                </div>
             </div>
             
-            <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; padding: 0; overflow: hidden;">
-                <div style="overflow-x: auto; width: 100%;">
-                    <table class="data-table" id="advisor-data-table" style="margin-top: 0; white-space: nowrap;">
+            <div class="panel student-login-card" style="padding: 0; overflow: hidden; border: 1px solid #e5e5ea;">
+                <div class="table-responsive">
+                    <table class="data-table" id="advisor-data-table" style="margin-top: 0;">
                         <thead style="background: #f5f5f7;">
                             <tr id="adv-table-header">
                                 <!-- Dynamic headers -->

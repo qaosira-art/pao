@@ -12,9 +12,12 @@ const AdvisorPortal = {
     },
 
     bindEvents() {
-        document.getElementById('btn-advisor-back').addEventListener('click', () => {
-            App.switchView('view-home');
-        });
+        const btnBack = document.getElementById('btn-advisor-back');
+        if (btnBack) {
+            btnBack.addEventListener('click', () => {
+                App.switchView('view-home');
+            });
+        }
 
         // Filter event listeners
         ['adv-filter-year', 'adv-filter-room', 'adv-filter-subject', 'adv-filter-name'].forEach(id => {
