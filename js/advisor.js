@@ -57,7 +57,7 @@ const AdvisorPortal = {
 
         const yearSelect = document.getElementById('adv-filter-year');
         const currentYear = yearSelect.value;
-        yearSelect.innerHTML = '<option value="">ชั้นปี</option>';
+        yearSelect.innerHTML = '<option value="">ปี</option>';
         years.forEach(y => {
             const opt = document.createElement('option');
             opt.value = y; opt.innerText = y;
@@ -99,6 +99,7 @@ const AdvisorPortal = {
         const fName = document.getElementById('adv-filter-name') ? document.getElementById('adv-filter-name').value.trim().toLowerCase() : '';
         const fSubId = document.getElementById('adv-filter-subject') ? document.getElementById('adv-filter-subject').value : '';
 
+        if (fYear) students = students.filter(s => s.year.toString() === fYear);
         if (fRoom) students = students.filter(s => s.room.toString() === fRoom);
         if (fName) students = students.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(fName));
 
@@ -122,11 +123,11 @@ const AdvisorPortal = {
 
         // Render Header
         let thHTML = `
-            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ชั้นปี</th>
+            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ปี</th>
             <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ห้อง</th>
-            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">ชื่อ - นามสกุล</th>
-            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500;">สิทธิ์สอบ</th>
-            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500; color: #0ea5e9;">${selectedSubject.name}</th>
+            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500; text-align: center;">ชื่อ - นามสกุล</th>
+            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500; text-align: center;">สิทธิ์</th>
+            <th style="border-bottom: 2px solid #e5e5ea; font-size: 13px; font-weight: 500; text-align: center;">คะแนน</th>
         `;
         thead.innerHTML = thHTML;
 
@@ -163,9 +164,9 @@ const AdvisorPortal = {
             let tdHTML = `
                 <td style="padding: 16px; font-size: 14px;">${s.year}</td>
                 <td style="padding: 16px; font-size: 14px;">${s.room}</td>
-                <td style="padding: 16px; font-size: 14px; font-weight: 500;">${s.firstName} ${s.lastName}</td>
-                <td style="padding: 16px; font-size: 14px;">${eligBadge}</td>
-                <td style="padding: 16px; font-size: 15px; font-weight: 600; color: #0ea5e9;">${scoreText}</td>
+                <td style="padding: 16px; font-size: 14px; font-weight: 500; text-align: center;">${s.firstName} ${s.lastName}</td>
+                <td style="padding: 16px; font-size: 14px; text-align: center;">${eligBadge}</td>
+                <td style="padding: 16px; font-size: 15px; font-weight: 600; color: #0ea5e9; text-align: center;">${scoreText}</td>
             `;
 
             tr.innerHTML = tdHTML;

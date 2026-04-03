@@ -5,6 +5,7 @@ const AdminPortal = {
         this.renderSubjects();
         this.renderExams();
         this.renderStudents();
+        this.renderPromotion();
     },
 
     bindEvents() {
@@ -169,6 +170,47 @@ const AdminPortal = {
 
         // Student Search
         document.getElementById('search-student').addEventListener('input', () => this.renderStudents());
+
+        // Promotion Events
+        ['promo-src-year', 'promo-src-room'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('change', () => this.updatePromotionCount());
+        });
+
+        const btnPromo = document.getElementById('btn-promo-confirm');
+        if(btnPromo) {
+            btnPromo.addEventListener('click', async () => {
+                const oldYear = document.getElementById('promo-src-year').value;
+                const oldRoom = document.getElementById('promo-src-room').value;
+                const newYear = document.getElementById('promo-target-year').value.trim();
+                const newRoom = document.getElementById('promo-target-room').value.trim();
+
+                if(!oldYear || !oldRoom || !newYear || !newRoom) {
+                    App.showModal('กรุณากรอกข้อมูลให้ครบถ้วนทั้งต้นทางและเป้าหมาย');
+                    return;
+                }
+
+                const students = Store.getStudents().filter(s => s.year.toString() === oldYear.toString() && s.room === oldRoom);
+                if(students.length === 0) {
+                    App.showModal('ไม่พบนักเรียนในห้องที่เลือก');
+                    return;
+                }
+
+                App.showModal(`ยืนยันการเลื่อนชั้นเรียนนักเรียนจำนวน ${students.length} คน จากปี ${oldYear} ห้อง ${oldRoom} ไปยังปี ${newYear} ห้อง ${newRoom} ใช่หรือไม่?`, async () => {
+                    const result = await Store.promoteStudents(oldYear, oldRoom, newYear, newRoom);
+                    if(result.success) {
+                        App.showModal(`เลื่อนชั้นเรียนสำเร็จ ${students.length} คน`, null);
+                        // Reset target inputs
+                        document.getElementById('promo-target-year').value = '';
+                        document.getElementById('promo-target-room').value = '';
+                        this.renderPromotion();
+                        this.renderStudents();
+                    } else {
+                        App.showModal(`เกิดข้อผิดพลาด: ${result.error}`);
+                    }
+                });
+            });
+        }
     },
 
     // Rendering Data
@@ -259,7 +301,7 @@ const AdminPortal = {
                 const newName = prompt('แก้ไขชื่อวิชา:', sub.name);
                 if (newName === null) return; // Cancelled
                 
-                const newYear = prompt('แก้ไขชั้นปี:', sub.year);
+                const newYear = prompt('แก้ไขปี:', sub.year);
                 if (newYear === null) return; // Cancelled
                 
                 if (newName.trim() !== '' && newYear.trim() !== '') {
@@ -418,6 +460,56 @@ const AdminPortal = {
                 this.renderStudents();
             });
         });
+    },
+
+    renderPromotion() {
+        const students = Store.getStudents();
+        const years = [...new Set(students.map(s => s.year))].sort((a, b) => parseInt(a) - parseInt(b));
+        const rooms = [...new Set(students.map(s => s.room))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+
+        const yearSelect = document.getElementById('promo-src-year');
+        const roomSelect = document.getElementById('promo-src-room');
+
+        if(yearSelect) {
+            const currentYear = yearSelect.value;
+            yearSelect.innerHTML = '<option value="">-- เลือกปี --</option>';
+            years.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                yearSelect.appendChild(opt);
+            });
+            if (years.includes(currentYear)) yearSelect.value = currentYear;
+        }
+
+        if(roomSelect) {
+            const currentRoom = roomSelect.value;
+            roomSelect.innerHTML = '<option value="">-- เลือกห้อง --</option>';
+            rooms.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.innerText = r;
+                roomSelect.appendChild(opt);
+            });
+            if (rooms.includes(currentRoom)) roomSelect.value = currentRoom;
+        }
+
+        this.updatePromotionCount();
+    },
+
+    updatePromotionCount() {
+        const year = document.getElementById('promo-src-year').value;
+        const room = document.getElementById('promo-src-room').value;
+        const countBox = document.getElementById('promo-src-count');
+
+        if(year && room) {
+            const count = Store.getStudents().filter(s => s.year.toString() === year.toString() && s.room === room).length;
+            countBox.innerHTML = `พบนักเรียน <span style="color: var(--apple-blue); font-weight: 700; font-size: 18px;">${count}</span> คน ในห้องนี้`;
+            countBox.style.background = '#e3f2fd';
+            countBox.style.borderColor = 'var(--apple-blue)';
+        } else {
+            countBox.innerText = 'กรุณาเลือกชั้นปีและห้องเรียน';
+            countBox.style.background = '#f5f5f7';
+            countBox.style.borderColor = '#d2d2d7';
+        }
     }
 };
 

@@ -74,46 +74,80 @@ const StudentPortal = {
             avatarUpload.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const maxSize = 200;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > maxSize) {
-                                height *= maxSize / width;
-                                width = maxSize;
-                            }
-                        } else {
-                            if (height > maxSize) {
-                                width *= maxSize / height;
-                                height = maxSize;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                        
-                        if (App.currentUser && App.currentUser.data && App.currentUser.data.id) {
-                            Store.updateStudent(App.currentUser.data.id, { profilePicture: dataUrl }).then(() => {
-                                App.currentUser.data.profilePicture = dataUrl;
-                                this.renderDashboard();
-                            });
-                        }
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+                this.openCropModal(file);
             });
+        }
+
+        // Crop Modal Controls
+        document.getElementById('btn-crop-cancel').addEventListener('click', () => {
+            this.closeCropModal();
+        });
+
+        document.getElementById('btn-crop-done').addEventListener('click', () => {
+            this.saveCroppedAvatar();
+        });
+    },
+
+    cropper: null,
+    openCropModal(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const cropImage = document.getElementById('crop-image');
+            cropImage.src = e.target.result;
+            
+            document.getElementById('crop-modal').classList.remove('hidden');
+            
+            if (this.cropper) {
+                this.cropper.destroy();
+            }
+            
+            this.cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1, // Restrict crop box to not exceed image
+                dragMode: 'move', // Allow moving the image behind the crop box
+                autoCropArea: 0.8,
+                restore: false,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                background: false,
+                modal: true,
+                movable: true,
+                zoomable: true,
+                touchDragZoom: true,
+                preview: '#student-avatar-preview' // Real-time preview on dashboard
+            });
+        };
+        reader.readAsDataURL(file);
+    },
+
+    closeCropModal() {
+        document.getElementById('crop-modal').classList.add('hidden');
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+        document.getElementById('student-avatar-upload').value = '';
+    },
+
+    async saveCroppedAvatar() {
+        if (!this.cropper) return;
+        
+        const canvas = this.cropper.getCroppedCanvas({
+            width: 300,
+            height: 300
+        });
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        
+        if (App.currentUser && App.currentUser.data && App.currentUser.data.id) {
+            await Store.updateStudent(App.currentUser.data.id, { profilePicture: dataUrl });
+            App.currentUser.data.profilePicture = dataUrl;
+            this.closeCropModal();
+            this.renderDashboard();
         }
     },
 
@@ -125,7 +159,7 @@ const StudentPortal = {
         const yearSelect = document.getElementById('stu-filter-year');
         if(yearSelect) {
             const currentYear = yearSelect.value;
-            yearSelect.innerHTML = '<option value="">ชั้นปี</option>';
+            yearSelect.innerHTML = '<option value="">ปี</option>';
             years.forEach(y => {
                 const opt = document.createElement('option');
                 opt.value = y; opt.innerText = y;
@@ -188,7 +222,7 @@ const StudentPortal = {
             let tdHTML = `
                 <td style="padding: 16px; font-size: 14px;">${s.year}</td>
                 <td style="padding: 16px; font-size: 14px;">${s.room}</td>
-                <td style="padding: 16px; font-size: 14px; font-weight: 500;">${s.firstName} ${s.lastName}</td>
+                <td style="padding: 16px; font-size: 14px; font-weight: 500; text-align: center;">${s.firstName} ${s.lastName}</td>
                 <td style="padding: 16px; font-size: 14px; text-align: right;">
                     <button class="btn btn-primary btn-select-student" style="padding: 6px 16px; font-size: 13px;" data-id="${s.id}">เลือก</button>
                 </td>
@@ -266,16 +300,16 @@ const StudentPortal = {
         }
 
         // Greeting
-        document.getElementById('student-dash-greeting').innerText = `สวัสดี ${user.firstName} ${user.lastName}`;
+        document.getElementById('student-dash-greeting').innerText = `${user.firstName} ${user.lastName}`;
 
         // Render eligibility badge
         const badge = document.getElementById('student-eligibility-badge');
         if (user.isEligible) {
             badge.className = 'badge elig-yes';
-            badge.innerText = 'มีสิทธิ์สอบ';
+            badge.innerText = 'มีสิทธิ์';
         } else {
             badge.className = 'badge elig-no';
-            badge.innerText = 'ไม่มีสิทธิ์สอบ';
+            badge.innerText = 'ไม่มีสิทธิ์';
         }
 
         const subjects = Store.getSubjects();
@@ -330,7 +364,7 @@ const StudentPortal = {
             } else if (questionsCount === 0) {
                 rightHtml = `<div style="color: #86868b; font-size: 14px;">ยังไม่มีข้อสอบ</div>`;
             } else if (!user.isEligible) {
-                rightHtml = `<button class="btn btn-secondary" disabled style="padding: 6px 16px; font-size: 13px;">ไม่มีสิทธิ์สอบ</button>`;
+                rightHtml = `<button class="btn btn-secondary" disabled style="padding: 6px 16px; font-size: 13px;">ไม่มีสิทธิ์</button>`;
             } else if (!sub.isOpen) {
                 rightHtml = `<button class="btn btn-secondary" disabled style="padding: 6px 16px; font-size: 13px;">ยังไม่เปิดสอบ</button>`;
             } else {
@@ -503,7 +537,7 @@ const StudentPortal = {
         }
         
         const sub = Store.getSubjects().find(s => s.id === this.currentExam.subjectId);
-        document.getElementById('result-subject-title').innerText = sub.name;
+        document.getElementById('result-subject-title').innerText = 'วิชา ' + sub.name;
         document.getElementById('result-score').innerText = score;
         document.getElementById('result-total').innerText = total;
 

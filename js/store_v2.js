@@ -268,6 +268,31 @@ const Store = {
         }
         return true;
     },
+    async promoteStudents(oldYear, oldRoom, newYear, newRoom) {
+        if(!this.isReady) return { success: false, error: 'Store not initialized' };
+        
+        // 1. Update remote (Supabase)
+        const { error } = await this.supabase
+            .from('students')
+            .update({ year: newYear, room: newRoom })
+            .match({ year: oldYear, room: oldRoom });
+
+        if (error) {
+            console.error("Supabase promoteStudents error:", error);
+            return { success: false, error: error.message };
+        }
+
+        // 2. Update local cache
+        this.cache.students.forEach(s => {
+            if (s.year.toString() === oldYear.toString() && s.room === oldRoom) {
+                s.year = newYear;
+                s.room = newRoom;
+            }
+        });
+
+        this.refreshUI('students');
+        return { success: true };
+    },
 
     // Exams (Questions)
     getExams() { return this.cache.exams; },

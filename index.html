@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=3">
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <style>
         :root {
             --font-family: 'Noto Sans Thai', sans-serif;
@@ -113,6 +115,7 @@
                         <ul class="admin-menu">
                             <li class="admin-menu-item active" data-target="admin-students">จัดการผู้เรียน</li>
                             <li class="admin-menu-item" data-target="admin-rooms">จัดการห้องเรียน</li>
+                            <li class="admin-menu-item" data-target="admin-promotion">เลื่อนชั้นเรียน</li>
                             <li class="admin-menu-item" data-target="admin-exams">สร้างข้อสอบ</li>
                             <li class="admin-menu-item" data-target="admin-subjects">จัดการวิชา</li>
                         </ul>
@@ -139,7 +142,7 @@
                             <form id="form-add-students">
                                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                                     <div class="form-group" style="margin-bottom: 0px; width: 120px;">
-                                        <label style="font-size: 12px; color: var(--apple-gray);">ชั้นปี</label>
+                                        <label style="font-size: 12px; color: var(--apple-gray);">ปี</label>
                                         <input type="number" id="stu-year" placeholder="เช่น 1" required style="border-radius: 8px; padding: 10px; height: 42px;">
                                     </div>
                                     <div class="form-group" style="margin-bottom: 0px; width: 200px;">
@@ -162,17 +165,17 @@
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3 style="font-size: 16px; color: #1d1d1f; margin: 0;">รายชื่อทั้งหมด (<span id="stu-count">0</span> คน)</h3>
                                 <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="text" id="search-student" placeholder="ค้นหา ชั้นปี/ห้อง/ชื่อ" style="border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-width: 200px; outline: none;">
+                                    <input type="text" id="search-student" placeholder="ค้นหา ปี/ห้อง/ชื่อ" style="border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-width: 200px; outline: none;">
                                     <button id="btn-delete-all-students" class="btn" style="background: #ff3b30; color: white; border-radius: 8px; padding: 8px 16px; border: none; font-size: 13px; font-weight: 600; cursor: pointer;">ลบทิ้งทั้งหมด</button>
                                 </div>
                             </div>
                             <table class="data-table clean-table" style="margin-top: 0; font-size: 13px; width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="background: #f5f5f7;">
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ชั้นปี</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ปี</th>
                                         <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ห้อง</th>
                                         <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ชื่อ - นามสกุล</th>
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">สิทธิ์สอบ</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">สิทธิ์</th>
                                         <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">จัดการ</th>
                                     </tr>
                                 </thead>
@@ -214,10 +217,14 @@
                     </div>
 
                     <!-- Tab: Create Exam -->
-                    <div id="admin-exams" class="admin-tab hidden" style="max-width: 900px;">
+                    <div id="admin-exams" class="admin-tab hidden">
+                        <div class="h2-wrapper" style="margin-bottom: 24px;">
+                            <h2 style="font-size: 22px; margin: 0;">สร้างข้อสอบ</h2>
+                        </div>
+                        
                         <div style="margin-bottom: 24px;">
                             <label style="font-size: 14px; font-weight: 600; color: #1d1d1f; display: block; margin-bottom: 8px;">เลือกวิชา</label>
-                            <select id="exam-subject-select" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; width: 300px; font-family: inherit; font-size: 14px; appearance: auto; background: white;">
+                            <select id="exam-subject-select" style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; width: 100%; max-width: 300px; font-family: inherit; font-size: 14px; appearance: auto; background: white;">
                                 <option value="">-- เลือกวิชา --</option>
                             </select>
                         </div>
@@ -274,7 +281,7 @@
                                     <input type="text" id="sub-name" placeholder="เช่น คณิตศาสตร์" required style="border-radius: 8px;">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
-                                    <label style="font-size: 12px; color: var(--apple-gray);">ชั้นปี</label>
+                                    <label style="font-size: 12px; color: var(--apple-gray);">ปี</label>
                                     <div>
                                         <input type="number" id="sub-year" placeholder="เช่น 1" required style="border-radius: 8px;">
                                     </div>
@@ -291,7 +298,7 @@
                                 <thead>
                                     <tr>
                                         <th style="color: var(--apple-gray); font-weight: 500;">ชื่อวิชา</th>
-                                        <th style="color: var(--apple-gray); font-weight: 500;">ชั้นปี</th>
+                                        <th style="color: var(--apple-gray); font-weight: 500;">ปี</th>
                                         <th style="color: var(--apple-gray); font-weight: 500;">สถานะ</th>
                                         <th style="color: var(--apple-gray); font-weight: 500;">จัดการ</th>
                                     </tr>
@@ -300,6 +307,55 @@
                                     <!-- Subject Rows render here -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Grade Promotion -->
+                    <div id="admin-promotion" class="admin-tab hidden">
+                        <h2 style="font-size: 22px; margin-bottom: 24px;">เลื่อนชั้นเรียน (Bulk Promotion)</h2>
+                        
+                        <div class="admin-layout" style="gap: 24px; align-items: stretch;">
+                            <!-- Source Card -->
+                            <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; flex: 1;">
+                                <h3 style="margin-bottom: 20px; font-size: 16px; color: #1d1d1f; display: flex; align-items: center;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 8px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                    ต้นทาง (ปัจจุบัน)
+                                </h3>
+                                <div class="form-group">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ชั้นปีปกติ</label>
+                                    <select id="promo-src-year" class="filter-select" style="width: 100%; border-radius: 8px; height: 42px; border: 1px solid #d2d2d7; background: white; appearance: auto;">
+                                        <option value="">-- เลือกปี --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ห้องเรียนปกติ</label>
+                                    <select id="promo-src-room" class="filter-select" style="width: 100%; border-radius: 8px; height: 42px; border: 1px solid #d2d2d7; background: white; appearance: auto;">
+                                        <option value="">-- เลือกห้อง --</option>
+                                    </select>
+                                </div>
+                                <div id="promo-src-count" style="margin-top: 15px; padding: 16px; background: #f5f5f7; border-radius: 10px; font-size: 14px; color: #1d1d1f; text-align: center; border: 1px dashed #d2d2d7; font-weight: 500;">
+                                    กรุณาเลือกชั้นปีและห้องเรียน
+                                </div>
+                            </div>
+
+                            <!-- Target Card -->
+                            <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; flex: 1;">
+                                <h3 style="margin-bottom: 20px; font-size: 16px; color: #1d1d1f; display: flex; align-items: center;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                                    เป้าหมาย (ปีใหม่)
+                                </h3>
+                                <div class="form-group">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ชั้นปีที่ต้องการย้ายไป</label>
+                                    <input type="number" id="promo-target-year" placeholder="เช่น 2" style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ห้องเรียนที่ต้องการย้ายไป</label>
+                                    <input type="text" id="promo-target-room" placeholder="เช่น 2/1" style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7;">
+                                </div>
+                                <div style="margin-top: 24px;">
+                                    <button id="btn-promo-confirm" class="btn btn-primary w-100" style="padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px;">ยืนยันการเลื่อนชั้นเรียน</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,7 +372,7 @@
                 <div class="student-filter-container">
                     <div class="filter-dropdown-row">
                         <select id="stu-filter-year" class="filter-select">
-                            <option value="">ชั้นปี</option>
+                            <option value="">ปี</option>
                         </select>
                         <select id="stu-filter-room" class="filter-select">
                             <option value="">ห้อง</option>
@@ -329,9 +385,9 @@
                     <table class="data-table student-table">
                         <thead>
                             <tr>
-                                <th>ชั้นปี</th>
+                                <th>ปี</th>
                                 <th>ห้อง</th>
-                                <th>ชื่อ - นามสกุล</th>
+                                <th style="text-align: center;">ชื่อ - นามสกุล</th>
                                 <th style="text-align: right;"></th>
                             </tr>
                         </thead>
@@ -357,15 +413,15 @@
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                     </div>
-                    <div style="position: absolute; bottom: -4px; right: -4px; background: #34c759; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; font-size: 18px; line-height: 1; border: 2px solid white; z-index: 2;">+</div>
+
                     <input type="file" id="student-avatar-upload" accept="image/png, image/jpeg" style="display: none;">
                 </label>
-                <h2 id="student-dash-greeting" style="color: white; font-size: 24px; margin: 0; font-weight: 700;">สวัสดี</h2>
+                <h2 id="student-dash-greeting" style="color: white; font-size: 24px; margin: 0; font-weight: 700;"></h2>
             </div>
             
             <!-- Eligibility Status Card -->
             <div style="background: white; border-radius: 12px; border: 1px solid #e5e5ea; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
-                <span style="font-weight: 600; font-size: 15px; color: #1d1d1f;">สถานะสิทธิ์สอบ:</span>
+                <span style="font-weight: 600; font-size: 15px; color: #1d1d1f;">สถานะสิทธิ์:</span>
                 <span id="student-eligibility-badge"></span>
             </div>
             
@@ -429,15 +485,13 @@
             </div>
         </section>
         
-        <!-- View: Exam Result -->
-        <section id="view-exam-result" class="view hidden">
-            <div class="result-card text-center panel">
-                <h2>ผลการสอบ</h2>
-                <h3 id="result-subject-title"></h3>
-                <div class="score-display">
-                    <span id="result-score"></span> / <span id="result-total"></span>
+        <section id="view-exam-result" class="view hidden" style="max-width: 800px; margin: 40px auto; padding: 0 16px;">
+            <div style="background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.04); padding: 80px 40px; text-align: center; border: 1px solid #f0f0f2;">
+                <h2 id="result-subject-title" style="font-size: 28px; font-weight: 700; color: #1d1d1f; margin-bottom: 12px;">วิชา ...</h2>
+                <div style="font-size: 20px; color: #86868b; font-weight: 500; margin-bottom: 40px;">
+                    <span id="result-score">0</span>/<span id="result-total">0</span>
                 </div>
-                <button id="btn-back-student-dash" class="btn btn-primary mt-4">กลับหน้าวิชาเรียน</button>
+                <button id="btn-back-student-dash" class="btn btn-primary" style="padding: 12px 40px; border-radius: 980px; font-weight: 600; font-size: 15px; background-color: #0071e3;">กลับหน้าวิชาเรียน</button>
             </div>
         </section>
 
@@ -472,11 +526,11 @@
                 <h2 style="font-size: 24px; text-align: left; font-weight: 700;">ที่ปรึกษา</h2>
             </div>
             
-            <div class="panel student-login-card">
+            <div class="panel student-login-card" style="padding: 24px; overflow: hidden; border: 1px solid #e5e5ea;">
                 <div class="student-filter-container">
                     <div class="filter-dropdown-row">
                         <select id="adv-filter-year" class="filter-select">
-                            <option value="">ชั้นปี</option>
+                            <option value="">ปี</option>
                         </select>
                         <select id="adv-filter-room" class="filter-select">
                             <option value="">ห้อง</option>
@@ -487,10 +541,8 @@
                     </select>
                     <input type="text" id="adv-filter-name" placeholder="ค้นหาชื่อ" class="filter-search">
                 </div>
-            </div>
-            
-            <div class="panel student-login-card" style="padding: 0; overflow: hidden; border: 1px solid #e5e5ea;">
-                <div class="table-responsive">
+
+                <div class="table-responsive" style="margin-top: 24px; border-top: 1px solid #f5f5f7;">
                     <table class="data-table" id="advisor-data-table" style="margin-top: 0;">
                         <thead style="background: #f5f5f7;">
                             <tr id="adv-table-header">
@@ -503,7 +555,7 @@
                     </table>
                 </div>
                 <!-- Pagination -->
-                <div id="adv-pagination" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 16px; background: white; border-top: 1px solid #e5e5ea;"></div>
+                <div id="adv-pagination" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 16px; background: white; border-top: 1px solid #f5f5f7;"></div>
             </div>
         </section>
 
@@ -521,9 +573,24 @@
     </div>
 
 
+    <!-- Crop Modal for Avatar -->
+    <div id="crop-modal" class="crop-modal hidden">
+        <div class="crop-header">
+            <button id="btn-crop-cancel" class="crop-btn-cancel">ยกเลิก</button>
+            <span class="crop-title">เพิ่มรูปโปรไฟล์</span>
+            <button id="btn-crop-done" class="crop-btn-done">เรียบร้อย</button>
+        </div>
+        <div class="crop-body">
+            <img id="crop-image" src="" alt="Source image">
+        </div>
+    </div>
+
+
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
     <script src="js/store_v2.js?v=3"></script>
     <script src="js/app_v2.js?v=3"></script>
