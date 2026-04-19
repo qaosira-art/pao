@@ -402,7 +402,10 @@ const StudentPortal = {
         }
         
         const sub = Store.getSubjects().find(s => s.id === subjectId);
-        document.getElementById('exam-subject-display').innerText = `วิชา: ${sub.name}`;
+        const headerTitle = document.getElementById('exam-header-title');
+        if (headerTitle) {
+            headerTitle.innerText = `วิชา: ${sub.name} (${questions.length} ข้อ)`;
+        }
         
         this.currentExam = {
             subjectId: subjectId,
@@ -411,97 +414,120 @@ const StudentPortal = {
             currentIndex: 0
         };
 
-        this.renderQuestion(0);
-        this.renderPagination();
+        this.renderAllQuestions();
         App.switchView('view-exam-room');
     },
 
-    renderQuestion(index) {
-        this.currentExam.currentIndex = index;
-        const q = this.currentExam.questions[index];
+    renderAllQuestions() {
         const area = document.getElementById('exam-taking-area');
-        
-        document.getElementById('exam-counter-pill').innerText = `ข้อ ${index + 1}/${this.currentExam.questions.length}`;
-
         area.innerHTML = '';
 
-        const qTitle = document.createElement('p');
-        qTitle.style.fontSize = '16px';
-        qTitle.style.fontWeight = '700';
-        qTitle.style.color = '#1d1d1f';
-        qTitle.style.marginBottom = '20px';
-        qTitle.innerText = `ข้อที่ ${index + 1}: ${q.questionText}`;
-        area.appendChild(qTitle);
-        
-        q.choices.forEach((choice, cIndex) => {
-            const label = document.createElement('label');
-            label.style.display = 'flex';
-            label.style.alignItems = 'center';
-            label.style.gap = '12px';
-            label.style.border = '1px solid #e5e5ea';
-            label.style.borderRadius = '8px';
-            label.style.padding = '14px 20px';
-            label.style.marginBottom = '12px';
-            label.style.cursor = 'pointer';
-            
-            // Highlight selected
-            if (this.currentExam.answers[index] === cIndex) {
-                label.style.borderColor = '#0ea5e9';
-                label.style.background = '#f0f9ff';
+        this.currentExam.questions.forEach((q, qIndex) => {
+            const qCard = document.createElement('div');
+            qCard.style.background = 'white';
+            qCard.style.border = '1px solid #e5e5ea';
+            qCard.style.borderRadius = '12px';
+            qCard.style.padding = '30px';
+            qCard.style.marginBottom = '20px';
+
+            const qText = document.createElement('p');
+            qText.style.fontSize = '17px';
+            qText.style.fontWeight = '700';
+            qText.style.color = '#1d1d1f';
+            qText.style.marginBottom = '20px';
+            qText.innerText = `${qIndex + 1}. ${q.questionText}`;
+            qCard.appendChild(qText);
+
+            if (q.imageUrl && q.imageUrl.trim() !== '') {
+                const img = document.createElement('img');
+                img.src = q.imageUrl;
+                img.onerror = function() { this.style.display = 'none'; };
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '300px';
+                img.style.borderRadius = '8px';
+                img.style.marginBottom = '20px';
+                img.style.display = 'block';
+                qCard.appendChild(img);
             }
 
-            label.innerHTML = `
-                <input type="radio" name="q_current" value="${cIndex}" ${this.currentExam.answers[index] === cIndex ? 'checked' : ''} style="accent-color: #0ea5e9;">
-                <span style="font-size: 15px; color: #1d1d1f;">${choice}</span>
-            `;
-            
-            label.addEventListener('change', (e) => {
-                this.currentExam.answers[index] = parseInt(e.target.value);
-                this.renderQuestion(index); // Re-render to show selected styling
-                this.renderPagination(); // Re-render pagination to show answered state
+            const choicesContainer = document.createElement('div');
+            choicesContainer.style.display = 'flex';
+            choicesContainer.style.flexDirection = 'column';
+            choicesContainer.style.gap = '12px';
+
+            q.choices.forEach((choice, cIndex) => {
+                const label = document.createElement('label');
+                label.className = 'radio-custom-container';
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '12px';
+                label.style.border = '1.5px solid #e5e5ea';
+                label.style.borderRadius = '12px';
+                label.style.padding = '14px 18px';
+                label.style.cursor = 'pointer';
+                label.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+                label.style.background = '#fff';
+                
+                // Unique Name for each question's radio group
+                const radioName = `q_${qIndex}`;
+                
+                const isSelected = this.currentExam.answers[qIndex] === cIndex;
+                if (isSelected) {
+                    label.style.borderColor = '#0071e3';
+                    label.style.background = '#f5faff';
+                    label.style.boxShadow = '0 2px 8px rgba(0, 113, 227, 0.08)';
+                }
+
+                label.innerHTML = `
+                    <input type="radio" name="${radioName}" value="${cIndex}" ${isSelected ? 'checked' : ''}>
+                    <span class="radio-custom-mark"></span>
+                    <span style="font-size: 15px; color: #1d1d1f; font-weight: 500;">${choice}</span>
+                `;
+                
+                label.addEventListener('click', (e) => {
+                    // Prevent double firing if clicking input directly
+                    if (e.target.tagName === 'INPUT') return;
+                    
+                    const radio = label.querySelector('input');
+                    radio.checked = true;
+                    this.updateAnswer(qIndex, cIndex);
+                });
+
+                label.querySelector('input').addEventListener('change', () => {
+                    this.updateAnswer(qIndex, cIndex);
+                });
+
+                choicesContainer.appendChild(label);
             });
 
-            area.appendChild(label);
+            qCard.appendChild(choicesContainer);
+            area.appendChild(qCard);
         });
     },
 
-    renderPagination() {
-        const pagArea = document.getElementById('exam-pagination');
-        pagArea.innerHTML = '';
-        
-        this.currentExam.questions.forEach((_, idx) => {
-            const btn = document.createElement('button');
-            btn.innerText = idx + 1;
-            btn.style.width = '40px';
-            btn.style.height = '40px';
-            btn.style.borderRadius = '8px';
-            btn.style.border = 'none';
-            btn.style.fontWeight = '600';
-            btn.style.cursor = 'pointer';
-            
-            if (idx === this.currentExam.currentIndex) {
-                // Active page
-                btn.style.background = '#0ea5e9';
-                btn.style.color = 'white';
-            } else if (this.currentExam.answers[idx] !== -1) {
-                // Answered
-                btn.style.background = '#e3fbed';
-                btn.style.color = '#1e7e46';
-                btn.style.border = '1px solid #1e7e46';
+    updateAnswer(qIndex, cIndex) {
+        this.currentExam.answers[qIndex] = cIndex;
+        // Update styling of all labels for this question
+        const radioName = `q_${qIndex}`;
+        const labels = document.querySelectorAll(`input[name="${radioName}"]`);
+        labels.forEach((radio, idx) => {
+            const label = radio.closest('label');
+            if (parseInt(radio.value) === cIndex) {
+                label.style.borderColor = '#0ea5e9';
+                label.style.background = '#f0f9ff';
             } else {
-                // Unanswered
-                btn.style.background = 'white';
-                btn.style.color = '#1d1d1f';
-                btn.style.border = '1px solid #d2d2d7';
+                label.style.borderColor = '#e5e5ea';
+                label.style.background = 'white';
             }
-
-            btn.addEventListener('click', () => {
-                this.renderQuestion(idx);
-                this.renderPagination();
-            });
-
-            pagArea.appendChild(btn);
         });
+    },
+
+    renderQuestion(index) {
+        // Obsolete but kept for compatibility if needed elsewhere temporarily
+    },
+
+    renderPagination() {
+        // Obsolete but kept for compatibility if needed elsewhere temporarily
     },
 
     submitExam() {
@@ -512,7 +538,7 @@ const StudentPortal = {
         });
 
         if (unanswered.length > 0) {
-            App.showModal(`คุณยังไม่ได้ตอบข้อ: ${unanswered.join(', ')} กรุณาตอบให้ครบก่อนส่ง`, null);
+            App.showModal(`คุณยังทำข้อสอบไม่ครบ (ขาดอีก ${unanswered.length} ข้อ) กรุณาตอบให้ครบก่อนส่ง`, null);
             return;
         }
 

@@ -27,7 +27,6 @@ html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    overflow-x: hidden;
 }
 
 /* Typography */
@@ -166,7 +165,6 @@ h1, h2, h3, h4 {
 .contact-phone { font-size: 16px; font-weight: 600; color: var(--apple-blue); }
 
 .view {
-    animation: fadeIn 0.3s ease;
     max-width: 1024px;
     margin: 0 auto;
     padding-top: 40px;
@@ -232,6 +230,13 @@ h1, h2, h3, h4 {
     justify-content: flex-start; 
     border-right: 1px solid #e5e5ea; 
     padding-right: 20px;
+    
+    /* Make sidebar sticky */
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px; /* Offset from header + extra space */
+    z-index: 100;
+    align-self: flex-start;
 }
 
 @media (max-width: 768px) {
@@ -603,4 +608,52 @@ h1, h2, h3, h4 {
 /* Ensure the preview on dashboard is clean during crop */
 #student-avatar-preview {
     overflow: hidden;
+}
+/* Custom Bullseye Radio Button */
+.radio-custom-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+.radio-custom-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0; width: 0;
+}
+.radio-custom-mark {
+    position: relative;
+    height: 22px;
+    width: 22px;
+    background-color: #fff;
+    border: 1.5px solid #d2d2d7;
+    border-radius: 50%;
+    margin-right: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+.radio-custom-container:hover input ~ .radio-custom-mark {
+    border-color: #0071e3;
+}
+.radio-custom-container input:checked ~ .radio-custom-mark {
+    border-color: #0071e3;
+    border-width: 1.5px;
+}
+.radio-custom-mark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0071e3;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.radio-custom-container input:checked ~ .radio-custom-mark:after {
+    display: block;
+    transform: translate(-50%, -50%) scale(1);
 }

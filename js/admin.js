@@ -1,4 +1,7 @@
 const AdminPortal = {
+    editingId: null,
+    currentSubjectId: null,
+    
     init() {
         this.bindEvents();
         this.renderRooms();
@@ -38,16 +41,17 @@ const AdminPortal = {
         // Rooms
         document.getElementById('form-add-room').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const input = document.getElementById('room-name');
-            const name = input.value.trim();
-            if (name) {
-                const result = await Store.addRoom(name);
-                if (result.success) { 
-                    input.value = ''; 
-                    this.renderRooms(); 
-                } else { 
-                    App.showModal(result.error === 'duplicate' ? 'มีห้องเรียนนี้อยู่แล้ว' : `เกิดข้อผิดพลาด: ${result.error}`); 
-                }
+            const year = document.getElementById('add-room-year').value;
+            const numberInput = document.getElementById('add-room-number-input');
+            const number = numberInput.value;
+            const name = `${year}/${number}`;
+            
+            const result = await Store.addRoom(name);
+            if (result.success) { 
+                numberInput.value = '';
+                AdminPortal.renderRooms(); 
+            } else { 
+                App.showModal(result.error === 'duplicate' ? 'มีห้องเรียนนี้อยู่แล้ว' : `เกิดข้อผิดพลาด: ${result.error}`); 
             }
         });
 
@@ -61,62 +65,56 @@ const AdminPortal = {
                 if (result.success) {
                     document.getElementById('sub-name').value = '';
                     document.getElementById('sub-year').value = '';
-                    this.renderSubjects();
+                    AdminPortal.renderSubjects();
                 } else {
                     App.showModal(`เกิดข้อผิดพลาด: ${result.error}`);
                 }
             }
         });
 
-        // Exams
+        // Exams Navigation & State
         document.getElementById('exam-subject-select').addEventListener('change', (e) => {
-            const subjectId = e.target.value;
+            this.currentSubjectId = e.target.value;
+            this.editingId = null;
             const builder = document.getElementById('exam-builder-container');
-            if (subjectId) {
+            if (this.currentSubjectId) {
                 builder.classList.remove('hidden');
-                this.renderExams(subjectId);
+                this.renderExams(this.currentSubjectId);
             } else {
                 builder.classList.add('hidden');
             }
         });
 
-        document.getElementById('btn-add-question').addEventListener('click', async (e) => {
-            const btn = e.target;
-            const subjectId = document.getElementById('exam-subject-select').value;
-            const q = document.getElementById('exam-q-text').value.trim();
-            const choices = [
-                document.getElementById('exam-c-0').value.trim(),
-                document.getElementById('exam-c-1').value.trim(),
-                document.getElementById('exam-c-2').value.trim(),
-                document.getElementById('exam-c-3').value.trim()
-            ];
+        // Add New Card Button
+        document.getElementById('btn-add-new-card').addEventListener('click', async () => {
+            if (!AdminPortal.currentSubjectId) {
+                App.showModal('กรุณาเลือกวิชาก่อนเพิ่มข้อสอบ');
+                return;
+            }
             
-            let correctRadio = document.querySelector('input[name="correct_choice"]:checked');
+            // Add a blank question to store
+            const result = await Store.addExamQuestion(
+                AdminPortal.currentSubjectId, 
+                '', 
+                ['', '', '', ''], 
+                0, 
+                null
+            );
             
-            if (q && choices.every(c => c !== '') && correctRadio) {
-                const correctIndex = correctRadio.value;
-                const editId = btn.getAttribute('data-edit-id');
+            if (result.success) {
+                // Find the ID of the newly added question (last one)
+                const exams = Store.getExamsBySubject(AdminPortal.currentSubjectId);
+                const newEx = exams[exams.length - 1];
+                AdminPortal.editingId = newEx.id;
+                AdminPortal.renderExams(AdminPortal.currentSubjectId);
                 
-                if (editId) {
-                    await Store.updateExamQuestion(editId, {
-                        questionText: q,
-                        choices: choices,
-                        correctIndex: parseInt(correctIndex)
-                    });
-                    btn.removeAttribute('data-edit-id');
-                    btn.innerText = '+ เพิ่มคำถาม';
-                } else {
-                    await Store.addExamQuestion(subjectId, q, choices, correctIndex);
-                }
-                
-                // Reset form
-                document.getElementById('exam-q-text').value = '';
-                for(let i=0; i<4; i++) document.getElementById(`exam-c-${i}`).value = '';
-                document.querySelector('input[name="correct_choice"][value="0"]').checked = true;
-                
-                this.renderExams(subjectId);
+                // Scroll to bottom
+                setTimeout(() => {
+                    const cards = document.querySelectorAll('.exam-card');
+                    if (cards.length > 0) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth' });
+                }, 100);
             } else {
-                App.showModal('กรุณากรอกข้อมูลให้ครบถ้วน');
+                App.showModal(`ไม่สามารถเพิ่มข้อสอบได้: ${result.error || 'Unknown Error'}`);
             }
         });
 
@@ -151,7 +149,7 @@ const AdminPortal = {
             }
 
             document.getElementById('stu-names').value = '';
-            this.renderStudents();
+            AdminPortal.renderStudents();
 
             if (duplicates.length > 0) {
                 App.showModal(`มีรายชื่อซ้ำ ไม่สามารถเพิ่มได้:\n${duplicates.join(', ')}`);
@@ -159,34 +157,62 @@ const AdminPortal = {
                 App.showModal(`เพิ่มนักเรียนสำเร็จ ${added} คน`, null);
             }
         });
+        
+        // Dynamic Room Filtering for Students
+        document.getElementById('stu-year').addEventListener('change', () => {
+            this.renderRooms();
+        });
 
-        // Delete All Students
+        // Delete All Students (Filtered)
         document.getElementById('btn-delete-all-students').addEventListener('click', () => {
-            App.showModal('คุณต้องการลบรายชื่อทั้งหมด ใช่หรือไม่?', async () => {
-                await Store.deleteAllStudents();
-                this.renderStudents();
+            const query = document.getElementById('search-student').value.trim().toLowerCase();
+            let studentsToDelete = Store.getStudents();
+            
+            if (query) {
+                studentsToDelete = studentsToDelete.filter(s => 
+                    s.year.toString().includes(query) || 
+                    s.room.toLowerCase().includes(query) || 
+                    `${s.firstName} ${s.lastName}`.toLowerCase().includes(query)
+                );
+            }
+
+            if (studentsToDelete.length === 0) {
+                App.showModal('ไม่พบรายชื่อที่ต้องการลบ');
+                return;
+            }
+
+            App.showModal(`ต้องการลบรายชื่อที่แสดงอยู่ทั้งหมดจำนวน ${studentsToDelete.length} คน ใช่หรือไม่?`, async () => {
+                const deletePromises = studentsToDelete.map(s => Store.deleteStudent(s.id));
+                await Promise.all(deletePromises);
+                AdminPortal.renderStudents();
+                App.showModal(`ลบรายชื่อสำเร็จ ${studentsToDelete.length} คน`, null);
             });
         });
 
         // Student Search
-        document.getElementById('search-student').addEventListener('input', () => this.renderStudents());
+        document.getElementById('search-student').addEventListener('input', () => AdminPortal.renderStudents());
 
         // Promotion Events
-        ['promo-src-year', 'promo-src-room'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('change', () => this.updatePromotionCount());
-        });
+        const promoSrcYearEl = document.getElementById('promo-src-year');
+        if(promoSrcYearEl) promoSrcYearEl.addEventListener('change', () => AdminPortal.renderPromotion());
+        const promoSrcRoomEl = document.getElementById('promo-src-room');
+        if(promoSrcRoomEl) promoSrcRoomEl.addEventListener('change', () => AdminPortal.updatePromotionCount());
 
         const btnPromo = document.getElementById('btn-promo-confirm');
         if(btnPromo) {
             btnPromo.addEventListener('click', async () => {
                 const oldYear = document.getElementById('promo-src-year').value;
                 const oldRoom = document.getElementById('promo-src-room').value;
-                const newYear = document.getElementById('promo-target-year').value.trim();
-                const newRoom = document.getElementById('promo-target-room').value.trim();
+                const newYear = document.getElementById('promo-target-year').value;
+                const newRoom = document.getElementById('promo-target-room').value;
 
                 if(!oldYear || !oldRoom || !newYear || !newRoom) {
                     App.showModal('กรุณากรอกข้อมูลให้ครบถ้วนทั้งต้นทางและเป้าหมาย');
+                    return;
+                }
+
+                if(oldYear.toString() === newYear.toString() && oldRoom === newRoom) {
+                    App.showModal('ไม่สามารถย้ายไปยังห้องเดิมได้');
                     return;
                 }
 
@@ -203,11 +229,28 @@ const AdminPortal = {
                         // Reset target inputs
                         document.getElementById('promo-target-year').value = '';
                         document.getElementById('promo-target-room').value = '';
-                        this.renderPromotion();
-                        this.renderStudents();
+                        AdminPortal.renderPromotion();
+                        AdminPortal.renderStudents();
                     } else {
                         App.showModal(`เกิดข้อผิดพลาด: ${result.error}`);
                     }
+                });
+            });
+        }
+
+        // Promo Target Room Population
+        const targetYearSelect = document.getElementById('promo-target-year');
+        if (targetYearSelect) {
+            targetYearSelect.addEventListener('change', () => {
+                const year = targetYearSelect.value;
+                const targetRoomSelect = document.getElementById('promo-target-room');
+                const rooms = Store.getRooms().filter(r => r.startsWith(year + '/')).sort();
+                
+                targetRoomSelect.innerHTML = '<option value="">-- เลือกห้อง --</option>';
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r; opt.innerText = r;
+                    targetRoomSelect.appendChild(opt);
                 });
             });
         }
@@ -217,41 +260,89 @@ const AdminPortal = {
     renderRooms() {
         const rooms = Store.getRooms();
         
-        const countSpan = document.getElementById('room-count');
-        if (countSpan) countSpan.innerText = rooms.length;
-        
-        const tbody = document.getElementById('room-table-body');
-        if (tbody) {
-            tbody.innerHTML = '';
-            rooms.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 12px 16px; border-bottom: 1px solid #f5f5f7;">${r}</td>
-                    <td style="padding: 12px 16px; border-bottom: 1px solid #f5f5f7;">
-                        <button class="delete-room-btn btn" data-id="${r}" style="background: #ff3b30; color: white; border: none; padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">ลบ</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+        // Numeric sort function for "Year/Number" format
+        const roomSort = (a, b) => {
+            const [yA, rA] = a.split('/').map(Number);
+            const [yB, rB] = b.split('/').map(Number);
+            if (yA !== yB) return yA - yB;
+            return rA - rB;
+        };
 
-        // Update Room Select for Students
-        const stuRoom = document.getElementById('stu-room');
-        const currVal = stuRoom.value;
-        stuRoom.innerHTML = '<option value="">-- เลือกห้อง --</option>';
-        rooms.forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r; opt.innerText = r;
-            stuRoom.appendChild(opt);
+        // Split rooms by year
+        const year1Rooms = rooms.filter(r => r.startsWith('1/')).sort(roomSort);
+        const year2Rooms = rooms.filter(r => r.startsWith('2/')).sort(roomSort);
+        
+        const populateSelect = (roomList, selectId) => {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const currVal = select.value;
+            select.innerHTML = '<option value="">-- เลือกห้อง --</option>';
+            roomList.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.innerText = r;
+                select.appendChild(opt);
+            });
+            if (roomList.includes(currVal)) select.value = currVal;
+        };
+
+        populateSelect(year1Rooms, 'room-select-1');
+        populateSelect(year2Rooms, 'room-select-2');
+
+        // Bind deletes for dropdowns
+        ['1', '2'].forEach(yr => {
+            const btn = document.getElementById(`btn-delete-room-${yr}`);
+            const sel = document.getElementById(`room-select-${yr}`);
+            if (btn && sel) {
+                // Clear existing listeners by replacing the element (simple way for dynamic render)
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', async () => {
+                    const roomId = sel.value;
+                    if (!roomId) {
+                        App.showModal('กรุณาเลือกห้องที่ต้องการลบ');
+                        return;
+                    }
+                    App.showModal(`ยืนยันการลบห้อง ${roomId}?`, async () => {
+                        await Store.deleteRoom(roomId);
+                        AdminPortal.renderRooms();
+                    });
+                });
+            }
         });
-        if (rooms.includes(currVal)) stuRoom.value = currVal;
+
+        // Sync other selects
+        const syncSelect = (id, filterYear = null) => {
+            const el = document.getElementById(id);
+            if (el) {
+                const currVal = el.value;
+                el.innerHTML = '<option value="">-- เลือกห้อง --</option>';
+                rooms
+                    .filter(r => !filterYear || r.startsWith(`${filterYear}/`))
+                    .sort(roomSort)
+                    .forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r; opt.innerText = r;
+                        el.appendChild(opt);
+                    });
+                if (rooms.includes(currVal)) el.value = currVal;
+            }
+        };
+
+        const stuYear = document.getElementById('stu-year')?.value;
+        syncSelect('stu-room', stuYear);
+        
+        // Promotion sync
+        const promoSrcYear = document.getElementById('promo-src-year')?.value;
+        const promoTargetYear = document.getElementById('promo-target-year')?.value;
+        syncSelect('promo-src-room', promoSrcYear);
+        syncSelect('promo-target-room', promoTargetYear);
 
         // Bind deletes
         document.querySelectorAll('.delete-room-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
+                const id = e.currentTarget.getAttribute('data-id');
                 await Store.deleteRoom(id);
-                this.renderRooms();
+                AdminPortal.renderRooms();
             });
         });
     },
@@ -271,18 +362,15 @@ const AdminPortal = {
             const tr = document.createElement('tr');
             
             const statusBadge = s.isOpen 
-                ? `<span style="background: #e3fbed; color: #1e7e46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">เปิด</span>` 
-                : `<span style="background: #e5e5ea; color: var(--apple-gray); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">ปิด</span>`;
+                ? `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e3fbed; color: #1e7e46; padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">เปิด</button>` 
+                : `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e5e5ea; color: var(--apple-gray); padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">ปิด</button>`;
 
             tr.innerHTML = `
                 <td>${s.name}</td>
                 <td>${s.year}</td>
-                <td>${statusBadge}</td>
-                <td>
+                <td style="text-align: center;">${statusBadge}</td>
+                <td style="text-align: center;">
                     <button class="btn btn-sm edit-sub-btn" data-id="${s.id}" style="background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; margin-right: 5px; padding: 4px 12px; border-radius: 6px;">แก้ไข</button>
-                    <button class="btn btn-sm toggle-sub-btn" data-id="${s.id}" style="background: #ff3b30; color: white; border: none; margin-right: 5px; padding: 4px 12px; border-radius: 6px;">
-                        ${s.isOpen ? 'ปิด' : 'เปิด'}
-                    </button>
                     <button class="btn btn-sm delete-sub-btn" data-id="${s.id}" style="background: #ff3b30; color: white; border: none; padding: 4px 12px; border-radius: 6px;">ลบ</button>
                 </td>
             `;
@@ -306,7 +394,7 @@ const AdminPortal = {
                 
                 if (newName.trim() !== '' && newYear.trim() !== '') {
                     await Store.updateSubject(id, { name: newName.trim(), year: newYear.trim() });
-                    this.renderSubjects();
+                    AdminPortal.renderSubjects();
                 } else {
                     App.showModal('กรุณากรอกข้อมูลให้ครบถ้วน');
                 }
@@ -318,7 +406,7 @@ const AdminPortal = {
                 const id = e.target.getAttribute('data-id');
                 const sub = Store.getSubjects().find(x => x.id === id);
                 await Store.updateSubject(id, { isOpen: !sub.isOpen });
-                this.renderSubjects();
+                AdminPortal.renderSubjects();
             });
         });
 
@@ -326,62 +414,157 @@ const AdminPortal = {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
                 await Store.deleteSubject(id);
-                this.renderSubjects();
+                AdminPortal.renderSubjects();
             });
         });
     },
 
     renderExams(subjectId) {
         if (!subjectId) return;
+        this.currentSubjectId = subjectId;
         const exams = Store.getExamsBySubject(subjectId);
-        
-        const countSpan = document.getElementById('exam-count');
-        if(countSpan) countSpan.innerText = exams.length;
-        
         const list = document.getElementById('question-list');
         list.innerHTML = '';
         
         exams.forEach((ex, idx) => {
-            const div = document.createElement('div');
-            const isLast = idx === exams.length - 1;
-            div.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: ${isLast ? 'none' : '1px solid #e5e5ea'};`;
-            div.innerHTML = `
-                <div style="font-size: 14px; color: #1d1d1f; font-weight: 500;">
-                    <span style="font-weight: 600;">ข้อ ${idx + 1}:</span> ${ex.questionText}
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-sm edit-exam-btn" data-id="${ex.id}" style="background: #e5e5ea; color: #1d1d1f; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 500;">แก้ไข</button>
-                    <button class="btn btn-sm delete-exam-btn" data-id="${ex.id}" style="background: #ff3b30; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 500;">ลบ</button>
-                </div>
+            const isEditing = this.editingId === ex.id;
+            const card = document.createElement('div');
+            card.className = 'exam-card';
+            card.style.cssText = `
+                background: white; 
+                border: 1px solid #e5e5ea; 
+                border-radius: 12px; 
+                padding: ${isEditing ? '24px' : '20px 24px'}; 
+                position: relative; 
+                cursor: ${isEditing ? 'default' : 'pointer'};
+                transition: all 0.2s ease;
+                ${isEditing ? 'border-left: 6px solid #0ea5e9; box-shadow: 0 4px 20px rgba(0,0,0,0.08);' : 'box-shadow: none;'}
             `;
-            list.appendChild(div);
-        });
+            
+            if (isEditing) {
+                // EDIT MODE
+                card.innerHTML = `
+                    <div style="margin-bottom: 24px;">
+                        <textarea class="edit-q-text" placeholder="พิมพ์คำถามที่นี่..." rows="2" style="width: 100%; border: none; border-bottom: 1px solid #e5e5ea; padding: 10px 0; font-family: inherit; font-size: 16px; font-weight: 600; outline: none; resize: none; background: #fafafa; padding: 12px; border-radius: 8px;">${ex.questionText}</textarea>
+                        
+                        <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px;">
+                            <input type="file" class="card-image-input hidden" accept="image/*">
+                            <button class="btn-card-upload-img" style="background: #f5f5f7; border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer;">🖼️ ${ex.imageUrl ? 'เปลี่ยนรูป' : 'ใส่รูปภาพ'}</button>
+                            <div class="card-img-preview-wrap ${ex.imageUrl && ex.imageUrl.trim() !== '' ? '' : 'hidden'}" style="position: relative;">
+                                <img src="${ex.imageUrl || ''}" onerror="this.parentElement.classList.add('hidden')" style="height: 50px; border-radius: 6px; border: 1px solid #e5e5ea;">
+                                <button class="btn-card-remove-img" style="position: absolute; top: -8px; right: -8px; background: #ff3b30; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer;">×</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="edit-choices-list" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                        ${ex.choices.map((c, i) => `
+                            <div style="display: flex; align-items: center; gap: 12px; background: #fff; padding: 4px; border-radius: 10px;">
+                                <label class="radio-custom-container" style="margin: 0; padding: 0;">
+                                    <input type="radio" name="correct_${ex.id}" value="${i}" ${ex.correctIndex === i ? 'checked' : ''}>
+                                    <span class="radio-custom-mark"></span>
+                                </label>
+                                <input type="text" class="edit-choice-input" data-index="${i}" value="${c}" placeholder="ตัวเลือก ${['ก','ข','ค','ง'][i]}" style="flex: 1; border: 1px solid #e5e5ea; border-radius: 8px; padding: 10px 14px; outline: none; font-size: 14px; background: #fff;">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f5f5f7; padding-top: 20px;">
+                        <button class="btn-card-delete" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" title="ลบข้อนี้">
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="#ff3b30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                        <div style="flex: 1;"></div>
+                        <button class="btn-card-save" style="background: #0ea5e9; color: white; border: none; border-radius: 8px; padding: 8px 24px; font-weight: 700; font-size: 13px; cursor: pointer;">บันทึก</button>
+                    </div>
+                `;
+                
+                // Event Listeners for editing
+                card.querySelector('.btn-card-save').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    AdminPortal.saveCard(ex.id, card);
+                });
+                card.querySelector('.btn-card-delete').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    App.showModal('ยืนยันการลบข้อสอบข้อนี้?', async () => {
+                        await Store.deleteExamQuestion(ex.id);
+                        AdminPortal.editingId = null;
+                        AdminPortal.renderExams(AdminPortal.currentSubjectId);
+                    });
+                });
+                
+                // Image Handling
+                const fileInput = card.querySelector('.card-image-input');
+                card.querySelector('.btn-card-upload-img').addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            const img = card.querySelector('img');
+                            img.src = ev.target.result;
+                            card.querySelector('.card-img-preview-wrap').classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                card.querySelector('.btn-card-remove-img').addEventListener('click', () => {
+                    card.querySelector('img').src = '';
+                    card.querySelector('.card-img-preview-wrap').classList.add('hidden');
+                });
 
-        document.querySelectorAll('.delete-exam-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                await Store.deleteExamQuestion(id);
-                this.renderExams(subjectId); // Re-render
-            });
-        });
+            } else {
+                // VIEW MODE
+                card.innerHTML = `
+                    <div style="font-size: 16px; font-weight: 600; color: #1d1d1f; margin-bottom: 12px;">
+                        ${idx + 1}. ${ex.questionText || '<span style="color: #86868b; font-weight: 400; font-style: italic;">ไม่ได้ระบุคำถาม...</span>'}
+                    </div>
+                    ${(ex.imageUrl && ex.imageUrl.trim() !== '') ? `<img src="${ex.imageUrl}" onerror="this.style.display='none'" style="max-width: 200px; max-height: 150px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e5ea;">` : ''}
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${ex.choices.map((c, i) => `
+                            <div style="font-size: 14px; color: ${ex.correctIndex === i ? '#0071e3' : '#48484a'}; font-weight: ${ex.correctIndex === i ? '600' : '400'}; display: flex; align-items: center; gap: 12px; padding: 4px 0;">
+                                <div class="radio-custom-container">
+                                    <input type="radio" disabled ${ex.correctIndex === i ? 'checked' : ''}>
+                                    <span class="radio-custom-mark" style="${ex.correctIndex === i ? 'border-color: #0071e3;' : ''}"></span>
+                                </div>
+                                <span style="margin-left: -4px;">${['ก.','ข.','ค.','ง.'][i]} ${c || '-'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    AdminPortal.editingId = ex.id;
+                    AdminPortal.renderExams(subjectId);
+                });
+            }
 
-        document.querySelectorAll('.edit-exam-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.target.getAttribute('data-id');
-                const ex = Store.getExams().find(x => x.id === id);
-                if (ex) {
-                    document.getElementById('exam-q-text').value = ex.questionText;
-                    ex.choices.forEach((c, i) => document.getElementById(`exam-c-${i}`).value = c);
-                    document.querySelector(`input[name="correct_choice"][value="${ex.correctIndex}"]`).checked = true;
-                    
-                    const addBtn = document.getElementById('btn-add-question');
-                    addBtn.setAttribute('data-edit-id', id);
-                    addBtn.innerText = 'บันทึกการแก้ไข';
-                    
-                    document.getElementById('exam-q-text').scrollIntoView({ behavior: 'smooth' });
-                }
-            });
+            list.appendChild(card);
         });
+    },
+
+    async saveCard(id, cardEl) {
+        const qText = cardEl.querySelector('.edit-q-text').value.trim();
+        const choices = Array.from(cardEl.querySelectorAll('.edit-choice-input')).map(input => input.value.trim());
+        const correctRadio = cardEl.querySelector(`input[name="correct_${id}"]:checked`);
+        const imageUrl = cardEl.querySelector('img').src;
+
+        if (!qText) {
+            App.showModal('กรุณากรอกคำถาม');
+            return;
+        }
+
+        const updates = {
+            questionText: qText,
+            choices: choices,
+            correctIndex: correctRadio ? parseInt(correctRadio.value) : 0,
+            imageUrl: imageUrl || null
+        };
+
+        const success = await Store.updateExamQuestion(id, updates);
+        if (success) {
+            AdminPortal.editingId = null;
+            AdminPortal.renderExams(AdminPortal.currentSubjectId);
+        } else {
+            App.showModal('เกิดข้อผิดพลาดในการบันทึก');
+        }
     },
 
     renderStudents() {
@@ -408,19 +591,19 @@ const AdminPortal = {
             const tr = document.createElement('tr');
             
             const eligBadge = s.isEligible 
-                ? `<span style="background: #e3fbed; color: #1e7e46; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 13px;">มี</span>`
-                : `<span style="background: #f5f5f7; color: #6e6e73; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 13px;">ไม่มี</span>`;
+                ? `<span style="background: #e3fbed; color: #1e7e46; padding: 4px 0; width: 54px; display: inline-block; text-align: center; border-radius: 12px; font-weight: 600; font-size: 13px;">มี</span>`
+                : `<span style="background: #f5f5f7; color: #6e6e73; padding: 4px 0; width: 54px; display: inline-block; text-align: center; border-radius: 12px; font-weight: 600; font-size: 13px;">ไม่มี</span>`;
 
             tr.innerHTML = `
-                <td style="padding: 16px;">${s.year}</td>
-                <td style="padding: 16px;">${s.room}</td>
-                <td style="padding: 16px; font-weight: 500; color: #1d1d1f;">${s.firstName} ${s.lastName}</td>
-                <td style="padding: 16px;">
+                <td style="padding: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.year}</td>
+                <td style="padding: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.room}</td>
+                <td style="padding: 16px; font-weight: 500; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.firstName} ${s.lastName}</td>
+                <td style="padding: 16px; text-align: center;">
                     <button class="toggle-elig-btn" data-id="${s.id}" style="border:none; cursor:pointer; background:none; padding:0;">
                         ${eligBadge}
                     </button>
                 </td>
-                <td style="padding: 16px;">
+                <td style="padding: 16px; text-align: center;">
                     <button class="btn btn-sm edit-stu-btn" data-id="${s.id}" style="background: #e5e5ea; color: #1d1d1f; border: none; margin-right: 5px; padding: 6px 14px; border-radius: 6px; font-weight: 500;">แก้ไข</button>
                     <button class="btn btn-sm delete-stu-btn" data-id="${s.id}" style="background: #ff3b30; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 500;">ลบ</button>
                 </td>
@@ -432,13 +615,33 @@ const AdminPortal = {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.getAttribute('data-id');
                 const st = Store.getStudents().find(x => x.id === id);
+                if (!st) return;
+
+                const newYear = prompt('แก้ไขปี:', st.year);
+                if (newYear === null) return;
+
+                const newRoom = prompt('แก้ไขห้อง:', st.room);
+                if (newRoom === null) return;
+
                 const newName = prompt('แก้ไขชื่อ-นามสกุล:', `${st.firstName} ${st.lastName}`);
-                if (newName && newName.trim() !== '') {
+                if (newName === null) return;
+
+                if (newName.trim() !== '') {
                     const parts = newName.trim().split(/\s+/);
-                    const first = parts[0] || '';
-                    const last = parts.slice(1).join(' ');
-                    await Store.updateStudent(id, { firstName: first, lastName: last });
-                    this.renderStudents();
+                    if (parts.length >= 2) {
+                        const first = parts[0];
+                        const last = parts.slice(1).join(' ');
+                        
+                        await Store.updateStudent(id, { 
+                            year: newYear.trim(),
+                            room: newRoom.trim(),
+                            firstName: first, 
+                            lastName: last 
+                        });
+                        AdminPortal.renderStudents();
+                    } else {
+                        App.showModal('กรุณากรอกทั้งชื่อและนามสกุล');
+                    }
                 }
             });
         });
@@ -449,7 +652,7 @@ const AdminPortal = {
                 const st = Store.getStudents().find(x => x.id === id);
                 if (st) {
                     await Store.updateStudentEligibility(id, !st.isEligible);
-                    this.renderStudents();
+                    AdminPortal.renderStudents();
                 }
             });
         });
@@ -457,25 +660,30 @@ const AdminPortal = {
         document.querySelectorAll('.delete-stu-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 await Store.deleteStudent(e.target.getAttribute('data-id'));
-                this.renderStudents();
+                AdminPortal.renderStudents();
             });
         });
     },
 
     renderPromotion() {
-        const students = Store.getStudents();
-        const years = [...new Set(students.map(s => s.year))].sort((a, b) => parseInt(a) - parseInt(b));
-        const rooms = [...new Set(students.map(s => s.room))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
-
+        const students = Store.getStudents() || [];
+        // Robust extraction of unique years and rooms, handling potential case-sensitivity issues
+        const years = [...new Set(students.map(s => s.year ?? s.Year))].filter(y => y != null).sort((a, b) => parseInt(a) - parseInt(b));
+        
         const yearSelect = document.getElementById('promo-src-year');
         const roomSelect = document.getElementById('promo-src-room');
+        const selectedYear = yearSelect?.value;
+
+        const rooms = [...new Set(students.map(s => s.room ?? s.Room))]
+            .filter(r => r != null && (!selectedYear || r.toString().startsWith(selectedYear + '/')))
+            .sort((a, b) => a.toString().localeCompare(b.toString(), 'th', { numeric: true }));
 
         if(yearSelect) {
             const currentYear = yearSelect.value;
             yearSelect.innerHTML = '<option value="">-- เลือกปี --</option>';
             years.forEach(y => {
                 const opt = document.createElement('option');
-                opt.value = y; opt.innerText = y;
+                opt.value = y; opt.innerText = "ปี " + y;
                 yearSelect.appendChild(opt);
             });
             if (years.includes(currentYear)) yearSelect.value = currentYear;
@@ -489,6 +697,7 @@ const AdminPortal = {
                 opt.value = r; opt.innerText = r;
                 roomSelect.appendChild(opt);
             });
+            // Verify if previous selection is still valid in filtered list
             if (rooms.includes(currentRoom)) roomSelect.value = currentRoom;
         }
 

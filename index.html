@@ -113,11 +113,11 @@
                     <div>
                         <div style="font-size: 12px; color: var(--apple-gray); margin-bottom: 10px; font-weight: 500; padding-left: 10px;">เมนูจัดการ</div>
                         <ul class="admin-menu">
-                            <li class="admin-menu-item active" data-target="admin-students">จัดการผู้เรียน</li>
-                            <li class="admin-menu-item" data-target="admin-rooms">จัดการห้องเรียน</li>
+                            <li class="admin-menu-item active" data-target="admin-rooms">จัดการห้องเรียน</li>
+                            <li class="admin-menu-item" data-target="admin-students">จัดการผู้เรียน</li>
                             <li class="admin-menu-item" data-target="admin-promotion">เลื่อนชั้นเรียน</li>
-                            <li class="admin-menu-item" data-target="admin-exams">สร้างข้อสอบ</li>
                             <li class="admin-menu-item" data-target="admin-subjects">จัดการวิชา</li>
+                            <li class="admin-menu-item" data-target="admin-exams">สร้างข้อสอบ</li>
                         </ul>
                     </div>
                     <div style="margin-top: 40px;">
@@ -130,7 +130,7 @@
                 <div class="admin-content">
 
                     <!-- Tab: Manage Students -->
-                    <div id="admin-students" class="admin-tab active">
+                    <div id="admin-students" class="admin-tab hidden">
                         <h2 style="font-size: 22px; margin-bottom: 24px;">จัดการผู้เรียน</h2>
                         
                         <!-- Top: Form -->
@@ -140,43 +140,47 @@
                                 เพิ่มนักเรียน
                             </h3>
                             <form id="form-add-students">
-                                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                                    <div class="form-group" style="margin-bottom: 0px; width: 120px;">
-                                        <label style="font-size: 12px; color: var(--apple-gray);">ปี</label>
-                                        <input type="number" id="stu-year" placeholder="เช่น 1" required style="border-radius: 8px; padding: 10px; height: 42px;">
+                                <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; width: 100%;">
+                                    <div class="form-group" style="margin-bottom: 0px; flex: 1;">
+                                        <label style="font-size: 12px; color: var(--apple-gray);">ชั้นปี</label>
+                                        <select id="stu-year" required style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7; appearance: auto;">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                        </select>
                                     </div>
-                                    <div class="form-group" style="margin-bottom: 0px; width: 200px;">
+                                    <div class="form-group" style="margin-bottom: 0px; flex: 2;">
                                         <label style="font-size: 12px; color: var(--apple-gray);">ห้อง</label>
                                         <select id="stu-room" required style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7; background: white; appearance: auto;">
                                             <option value="">เลือกห้อง</option>
                                         </select>
                                     </div>
+                                    <button type="submit" class="btn btn-primary" style="padding: 0; border-radius: 8px; font-weight: 600; font-size: 14px; height: 42px; width: 120px;">บันทึก</button>
                                 </div>
                                 <div class="form-group">
-                                    <label style="font-size: 12px; color: var(--apple-gray);">ชื่อ นามสกุล (แต่ละคนขึ้นบรรทัดใหม่)</label>
-                                    <textarea id="stu-names" rows="4" placeholder="เช่น:&#10;ศิระ ยอแสง&#10;สมชาย ใจดี&#10;สมหญิง รักเรียน" required style="border-radius: 8px; border: 1px solid #d2d2d7; padding: 12px; font-family: inherit; font-size: 14px;"></textarea>
+                                    <label style="font-size: 12px; color: var(--apple-gray);">ชื่อ นามสกุล (เพิ่มหลายคนขึ้นบรรทัดใหม่)</label>
+                                    <textarea id="stu-names" rows="4" placeholder="เช่น: ศิระ ยอแสง" required style="border-radius: 8px; border: 1px solid #d2d2d7; padding: 12px; font-family: inherit; font-size: 14px;"></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-primary" style="padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">บันทึก</button>
                             </form>
                         </div>
                         
                         <!-- Bottom: List -->
-                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h3 style="font-size: 16px; color: #1d1d1f; margin: 0;">รายชื่อทั้งหมด (<span id="stu-count">0</span> คน)</h3>
+                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; min-height: 450px; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; height: 40px;">
+                                <h3 style="font-size: 16px; color: #1d1d1f; margin: 0; min-width: 200px;">รายชื่อทั้งหมด (<span id="stu-count">0</span> คน)</h3>
                                 <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="text" id="search-student" placeholder="ค้นหา ปี/ห้อง/ชื่อ" style="border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-width: 200px; outline: none;">
-                                    <button id="btn-delete-all-students" class="btn" style="background: #ff3b30; color: white; border-radius: 8px; padding: 8px 16px; border: none; font-size: 13px; font-weight: 600; cursor: pointer;">ลบทิ้งทั้งหมด</button>
+                                    <input type="text" id="search-student" placeholder="ค้นหา ปี/ห้อง/ชื่อ" style="border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; font-size: 13px; width: 250px; outline: none;">
+                                    <button id="btn-delete-all-students" class="btn" style="background: #ff3b30; color: white; border-radius: 8px; padding: 8px 16px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;">ลบทั้งหมด</button>
                                 </div>
                             </div>
-                            <table class="data-table clean-table" style="margin-top: 0; font-size: 13px; width: 100%; border-collapse: collapse;">
+                            <div class="table-container" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+                                <table class="data-table clean-table" style="margin-top: 0; font-size: 13px; width: 100%; border-collapse: collapse; table-layout: fixed;">
                                 <thead>
                                     <tr style="background: #f5f5f7;">
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ปี</th>
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ห้อง</th>
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">ชื่อ - นามสกุล</th>
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">สิทธิ์</th>
-                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none;">จัดการ</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none; width: 10%;">ชั้นปี</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none; width: 15%;">ห้อง</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none; width: 40%;">ชื่อ - นามสกุล</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none; text-align: center; width: 15%;">สิทธิ์</th>
+                                        <th style="color: #6e6e73; font-weight: 600; padding: 12px 16px; border-bottom: none; text-align: center; width: 20%;">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="student-table-body">
@@ -184,34 +188,76 @@
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     </div>
 
-                    <div id="admin-rooms" class="admin-tab hidden">
-                        <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 24px;">
-                            <h2 style="font-size: 22px; margin: 0;">จัดการห้องเรียน</h2>
-                        </div>
-                        
-                        <!-- Panel: Room List with Integrated Add Form -->
-                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; padding: 24px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
-                                <h3 style="font-size: 16px; color: #1d1d1f; font-weight: 600; margin: 0;">ห้องเรียนทั้งหมด (<span id="room-count">0</span>)</h3>
-                                <form id="form-add-room" style="display: flex; gap: 12px; align-items: center;">
-                                    <input type="text" id="room-name" placeholder="เช่น 1/1" required style="border-radius: 8px; padding: 10px 14px; border: 1px solid #d2d2d7; outline: none; width: 180px; font-family: inherit; font-size: 14px;">
-                                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;">+ เพิ่มห้องเรียน</button>
-                                </form>
+                    <div id="admin-rooms" class="admin-tab" style="padding-bottom: 40px;">
+                        <h2 style="font-size: 22px; margin-bottom: 24px;">จัดการห้องเรียน</h2>
+
+                        <!-- Add Room Card (1, 2, 3) -->
+                        <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 16px; padding: 24px; background: white; margin-bottom: 30px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#86868b" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                <span style="font-size: 16px; font-weight: 600; color: #1d1d1f;">เพิ่มห้องเรียนใหม่</span>
                             </div>
-                            <div style="margin-top: 0; overflow: hidden;">
-                                <table class="data-table clean-table" style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr style="background: #f5f5f7;">
-                                            <th style="color: var(--apple-gray); font-weight: 500;">ชื่อห้องเรียน</th>
-                                            <th style="color: var(--apple-gray); font-weight: 500; width: 100px;">จัดการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="room-table-body">
-                                        <!-- Rooms render here -->
-                                    </tbody>
-                                </table>
+
+                            <form id="form-add-room" style="display: flex; align-items: flex-end; gap: 20px;">
+                                <div style="flex: 1;">
+                                    <label style="font-size: 13px; color: #86868b; margin-bottom: 8px; display: block; font-weight: 500;">ชั้นปี</label>
+                                    <select id="add-room-year" required style="width: 100%; height: 44px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 15px; appearance: auto; background: white; outline: none;">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 13px; color: #86868b; margin-bottom: 8px; display: block; font-weight: 500;">ห้อง</label>
+                                    <input type="number" id="add-room-number-input" placeholder="พิมพ์เลขห้อง เช่น 1" required style="width: 100%; height: 44px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 15px; font-size: 15px; outline: none;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <button type="submit" class="btn btn-primary" style="width: 100%; height: 44px; border-radius: 10px; font-weight: 600; font-size: 15px;">เพิ่มห้องเรียน</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div style="display: flex; gap: 24px;">
+                            <!-- Panel Year 1 -->
+                            <div class="panel" style="flex: 1; border: 1px solid #e5e5ea; box-shadow: none; border-radius: 16px; padding: 24px; background: white;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#86868b" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                    <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1d1d1f;">ปี 1</h3>
+                                </div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="font-size: 13px; color: #86868b; font-weight: 500;">ห้องเรียน</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <select id="room-select-1" style="flex: 1; height: 44px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 15px; appearance: auto; background: white; outline: none;">
+                                            <option value="">-- เลือกห้อง --</option>
+                                        </select>
+                                        <button id="btn-delete-room-1" style="background: none; border: none; cursor: pointer; color: #ff3b30; padding: 8px; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
+                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Panel Year 2 -->
+                            <div class="panel" style="flex: 1; border: 1px solid #e5e5ea; box-shadow: none; border-radius: 16px; padding: 24px; background: white;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#86868b" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1d1d1f;">ปี 2</h3>
+                                </div>
+                                
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="font-size: 13px; color: #86868b; font-weight: 500;">ห้องเรียน</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <select id="room-select-2" style="flex: 1; height: 44px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 15px; appearance: auto; background: white; outline: none;">
+                                            <option value="">-- เลือกห้อง --</option>
+                                        </select>
+                                        <button id="btn-delete-room-2" style="background: none; border: none; cursor: pointer; color: #ff3b30; padding: 8px; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
+                                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -230,39 +276,14 @@
                         </div>
                         
                         <div class="exam-builder hidden" id="exam-builder-container">
-                            <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; padding: 24px;">
-                                <div style="margin-bottom: 24px;">
-                                    <label style="font-size: 12px; font-weight: 600; color: var(--apple-gray); display: block; margin-bottom: 8px;">คำถาม</label>
-                                    <textarea id="exam-q-text" placeholder="พิมพ์คำถาม" rows="3" style="width: 100%; border: 1px solid #d2d2d7; border-radius: 8px; padding: 12px; font-family: inherit; font-size: 14px; outline: none; resize: vertical;"></textarea>
-                                </div>
-                                <div class="choices-container" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
-                                    <div class="choice-row" style="display: flex; align-items: center; gap: 16px;">
-                                        <input type="radio" name="correct_choice" value="0" checked style="width: 18px; height: 18px; accent-color: var(--apple-blue); cursor: pointer;">
-                                        <span style="font-weight: 600; color: #1d1d1f; font-size: 14px; width: 14px;">A</span>
-                                        <input type="text" id="exam-c-0" placeholder="ตัวเลือก A" style="flex: 1; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none;">
-                                    </div>
-                                    <div class="choice-row" style="display: flex; align-items: center; gap: 16px;">
-                                        <input type="radio" name="correct_choice" value="1" style="width: 18px; height: 18px; accent-color: var(--apple-blue); cursor: pointer;">
-                                        <span style="font-weight: 600; color: #1d1d1f; font-size: 14px; width: 14px;">B</span>
-                                        <input type="text" id="exam-c-1" placeholder="ตัวเลือก B" style="flex: 1; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none;">
-                                    </div>
-                                    <div class="choice-row" style="display: flex; align-items: center; gap: 16px;">
-                                        <input type="radio" name="correct_choice" value="2" style="width: 18px; height: 18px; accent-color: var(--apple-blue); cursor: pointer;">
-                                        <span style="font-weight: 600; color: #1d1d1f; font-size: 14px; width: 14px;">C</span>
-                                        <input type="text" id="exam-c-2" placeholder="ตัวเลือก C" style="flex: 1; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none;">
-                                    </div>
-                                    <div class="choice-row" style="display: flex; align-items: center; gap: 16px;">
-                                        <input type="radio" name="correct_choice" value="3" style="width: 18px; height: 18px; accent-color: var(--apple-blue); cursor: pointer;">
-                                        <span style="font-weight: 600; color: #1d1d1f; font-size: 14px; width: 14px;">D</span>
-                                        <input type="text" id="exam-c-3" placeholder="ตัวเลือก D" style="flex: 1; border: 1px solid #d2d2d7; border-radius: 8px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none;">
-                                    </div>
-                                </div>
-                                <button id="btn-add-question" style="background: #34c759; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">+ เพิ่มคำถาม</button>
+                            <div id="question-list" style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px;">
+                                <!-- Each card will be rendered as a panel -->
                             </div>
                             
-                            <h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 14px; color: #1d1d1f; font-weight: 600;">ข้อสอบที่สร้างไว้ (<span id="exam-count">0</span> ข้อ)</h3>
-                            <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 8px; padding: 0; overflow: hidden;" id="question-list">
-                                <!-- Rendered questions list -->
+                            <div style="display: flex; justify-content: center; margin-bottom: 60px;">
+                                <button id="btn-add-new-card" style="background: white; color: #0ea5e9; border: 2px dashed #0ea5e9; padding: 16px 48px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; width: 100%; max-width: 400px;">
+                                    + เพิ่มข้อสอบใหม่
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -273,21 +294,22 @@
                         
                         <h2 style="font-size: 22px; margin-bottom: 24px;">จัดการวิชา</h2>
                         
-                        <div class="panel mb-4" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; margin-bottom: 24px;">
-                            <h3 style="margin-bottom: 20px; font-size: 16px; color: #1d1d1f;">เพิ่มวิชา</h3>
-                            <form id="form-add-subject" style="display: flex; gap: 15px; align-items: flex-end;">
-                                <div class="form-group" style="margin-bottom: 0; flex: 2;">
-                                    <label style="font-size: 12px; color: var(--apple-gray);">ชื่อวิชา</label>
-                                    <input type="text" id="sub-name" placeholder="เช่น คณิตศาสตร์" required style="border-radius: 8px;">
+                        <div class="panel mb-4" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; margin-bottom: 24px; padding: 24px;">
+                            <h3 style="margin-bottom: 20px; font-size: 16px; color: #1d1d1f; font-weight: 600;">เพิ่มวิชา</h3>
+                            <form id="form-add-subject" style="display: flex; gap: 16px; align-items: flex-end;">
+                                <div class="form-group" style="margin-bottom: 0; flex: 3;">
+                                    <label style="font-size: 13px; font-weight: 600; color: #86868b; margin-bottom: 8px; display: block;">ชื่อวิชา</label>
+                                    <input type="text" id="sub-name" placeholder="เช่น คณิตศาสตร์" required style="border-radius: 8px; height: 42px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; width: 100%;">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
-                                    <label style="font-size: 12px; color: var(--apple-gray);">ปี</label>
-                                    <div>
-                                        <input type="number" id="sub-year" placeholder="เช่น 1" required style="border-radius: 8px;">
-                                    </div>
+                                    <label style="font-size: 13px; font-weight: 600; color: #86868b; margin-bottom: 8px; display: block;">ปี</label>
+                                    <select id="sub-year" required style="border-radius: 8px; height: 42px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; width: 100%; appearance: auto;">
+                                        <option value="1">ปี 1</option>
+                                        <option value="2">ปี 2</option>
+                                    </select>
                                 </div>
                                 <div style="flex: 1;">
-                                    <button type="submit" class="btn btn-primary w-100" style="padding: 12px; border-radius: 8px; font-weight: 600;">เพิ่มวิชา</button>
+                                    <button type="submit" class="btn btn-primary w-100" style="padding: 0 24px; border-radius: 8px; font-weight: 600; height: 42px; background: #0066cc; color: white; border: none; cursor: pointer; font-size: 14px;">เพิ่มวิชา</button>
                                 </div>
                             </form>
                         </div>
@@ -299,8 +321,8 @@
                                     <tr>
                                         <th style="color: var(--apple-gray); font-weight: 500;">ชื่อวิชา</th>
                                         <th style="color: var(--apple-gray); font-weight: 500;">ปี</th>
-                                        <th style="color: var(--apple-gray); font-weight: 500;">สถานะ</th>
-                                        <th style="color: var(--apple-gray); font-weight: 500;">จัดการ</th>
+                                        <th style="color: var(--apple-gray); font-weight: 500; text-align: center;">สถานะ</th>
+                                        <th style="color: var(--apple-gray); font-weight: 500; text-align: center;">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="subject-table-body">
@@ -312,7 +334,7 @@
 
                     <!-- Tab: Grade Promotion -->
                     <div id="admin-promotion" class="admin-tab hidden">
-                        <h2 style="font-size: 22px; margin-bottom: 24px;">เลื่อนชั้นเรียน (Bulk Promotion)</h2>
+                        <h2 style="font-size: 22px; margin-bottom: 24px;">เลื่อนชั้นเรียน</h2>
                         
                         <div class="admin-layout" style="gap: 24px; align-items: stretch;">
                             <!-- Source Card -->
@@ -346,14 +368,20 @@
                                 </h3>
                                 <div class="form-group">
                                     <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ชั้นปีที่ต้องการย้ายไป</label>
-                                    <input type="number" id="promo-target-year" placeholder="เช่น 2" style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7;">
+                                    <select id="promo-target-year" required style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7; appearance: auto; background: white;">
+                                        <option value="">-- เลือกปี --</option>
+                                        <option value="1">ปี 1</option>
+                                        <option value="2">ปี 2</option>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label style="font-size: 13px; font-weight: 600; color: var(--apple-gray);">ห้องเรียนที่ต้องการย้ายไป</label>
-                                    <input type="text" id="promo-target-room" placeholder="เช่น 2/1" style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7;">
+                                    <select id="promo-target-room" required style="border-radius: 8px; padding: 10px; height: 42px; width: 100%; border: 1px solid #d2d2d7; appearance: auto; background: white;">
+                                        <option value="">-- เลือกห้อง --</option>
+                                    </select>
                                 </div>
                                 <div style="margin-top: 24px;">
-                                    <button id="btn-promo-confirm" class="btn btn-primary w-100" style="padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px;">ยืนยันการเลื่อนชั้นเรียน</button>
+                                    <button id="btn-promo-confirm" class="btn btn-primary w-100" style="padding: 12px; border-radius: 10px; font-weight: 600; font-size: 14px; background: #0066cc; color: white;">ยืนยันการเลื่อนชั้นเรียน</button>
                                 </div>
                             </div>
                         </div>
@@ -463,19 +491,19 @@
         <section id="view-exam-room" class="view hidden" style="max-width: 800px; margin: 0 auto; padding-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h2 style="font-size: 22px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px;">เลือกคำตอบ</h2>
-                    <div id="exam-subject-display" style="font-size: 14px; color: #86868b;">วิชา: ...</div>
+                    <h2 id="exam-header-title" style="font-size: 22px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px;">วิชา ...</h2>
+                    <div id="exam-subject-display" class="hidden" style="font-size: 14px; color: #86868b;">วิชา: ...</div>
                 </div>
-                <div id="exam-counter-pill" style="background: #0ea5e9; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; padding: 6px 16px;">
+                <div id="exam-counter-pill" class="hidden" style="background: #0ea5e9; color: white; border-radius: 8px; font-weight: 600; font-size: 14px; padding: 6px 16px;">
                     ข้อ 1/1
                 </div>
             </div>
             
-            <div id="exam-taking-area" style="background: white; border: 1px solid #e5e5ea; border-radius: 12px; padding: 30px; margin-bottom: 24px;">
-                <!-- Current Question renders here -->
+            <div id="exam-taking-area" style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px;">
+                <!-- Questions render here as separate cards -->
             </div>
             
-            <div id="exam-pagination" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+            <div id="exam-pagination" class="hidden" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
                 <!-- Pagination buttons render here -->
             </div>
             
@@ -497,7 +525,7 @@
 
         <!-- View: Advisor Login -->
         <section id="view-advisor-login" class="view hidden">
-            <div class="panel login-card-modern student-login-card">
+            <div class="login-card-modern">
                 <div class="login-icon">
                     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" fill="#f0f7ff" stroke="#0077ed"/>
@@ -506,16 +534,16 @@
                         <path d="M16 3.13a4 4 0 010 7.75" stroke="#0077ed"/>
                     </svg>
                 </div>
-                <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 8px; color: #000;">เข้าสู่ระบบที่ปรึกษา</h2>
+                <h2>เข้าสู่ระบบที่ปรึกษา</h2>
                 <p class="login-subtitle">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p>
                 
                 <form id="advisor-login-form">
                     <div class="form-group">
                         <label for="advisor-password">รหัสผ่าน</label>
-                        <input type="password" id="advisor-password" placeholder="กรุณากรอกรหัสผ่าน" class="filter-search" style="height: 48px;">
+                        <input type="password" id="advisor-password" placeholder="กรุณากรอกรหัสผ่าน">
                     </div>
                     <p id="advisor-login-error" class="error-msg hidden">รหัสผ่านไม่ถูกต้อง</p>
-                    <button type="submit" class="btn btn-primary w-100 btn-login" style="border-radius: 8px; height: 48px;">เข้าสู่ระบบ</button>
+                    <button type="submit" class="btn btn-primary w-100 btn-login">เข้าสู่ระบบ</button>
                 </form>
             </div>
         </section>

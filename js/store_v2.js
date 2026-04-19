@@ -52,7 +52,17 @@ const Store = {
         if (error) {
             console.error(`Error loading ${colName}:`, error);
         } else {
-            this.cache[colName] = data || [];
+            if (colName === 'exams') {
+                this.cache[colName] = (data || []).map(ex => {
+                    if (ex.questionText && ex.questionText.includes('|||IMG:')) {
+                        const [text, img] = ex.questionText.split('|||IMG:');
+                        return { ...ex, questionText: text, imageUrl: img };
+                    }
+                    return { ...ex, imageUrl: null };
+                });
+            } else {
+                this.cache[colName] = data || [];
+            }
         }
     },
 
@@ -68,10 +78,20 @@ const Store = {
                 const oldRec = payload.old;
                 
                 if (eventType === 'INSERT') {
-                    if (!this.cache[table].find(x => x.id === newRec.id)) this.cache[table].push(newRec);
+                    let record = newRec;
+                    if (table === 'exams' && record.questionText && record.questionText.includes('|||IMG:')) {
+                        const [text, img] = record.questionText.split('|||IMG:');
+                        record = { ...record, questionText: text, imageUrl: img };
+                    }
+                    if (!this.cache[table].find(x => x.id === record.id)) this.cache[table].push(record);
                 } else if (eventType === 'UPDATE') {
-                    const idx = this.cache[table].findIndex(x => x.id === newRec.id);
-                    if (idx > -1) this.cache[table][idx] = newRec;
+                    let record = newRec;
+                    if (table === 'exams' && record.questionText && record.questionText.includes('|||IMG:')) {
+                        const [text, img] = record.questionText.split('|||IMG:');
+                        record = { ...record, questionText: text, imageUrl: img };
+                    }
+                    const idx = this.cache[table].findIndex(x => x.id === record.id);
+                    if (idx > -1) this.cache[table][idx] = record;
                 } else if (eventType === 'DELETE') {
                     const idx = this.cache[table].findIndex(x => x.id === oldRec.id);
                     if (idx > -1) this.cache[table].splice(idx, 1);
@@ -299,18 +319,29 @@ const Store = {
     getExamsBySubject(subjectId) {
         return this.cache.exams.filter(e => e.subjectId === subjectId);
     },
-    async addExamQuestion(subjectId, questionText, choices, correctIndex) {
+    async addExamQuestion(subjectId, questionText, choices, correctIndex, imageUrl = null) {
         if(!this.isReady) return { success: false, error: 'Store not initialized' };
+        
+        // Packing image into questionText to avoid schema errors
+        const packedText = imageUrl ? `${questionText}|||IMG:${imageUrl}` : questionText;
+        
         const tempId = crypto.randomUUID();
         const data = {
             id: tempId,
             subjectId: subjectId,
-            questionText: questionText,
+            questionText: packedText,
             choices: choices,
             correctIndex: parseInt(correctIndex),
             created_at: new Date().toISOString()
         };
-        this.cache.exams.push(data);
+        
+        // Add to local cache with UNPACKED data for UI
+        this.cache.exams.push({
+            ...data,
+            questionText: questionText,
+            imageUrl: imageUrl
+        });
+
         const { error } = await this.supabase.from('exams').insert([data]);
         if (error) {
             console.error("Supabase addExamQuestion error:", error);
@@ -322,16 +353,26 @@ const Store = {
     async updateExamQuestion(id, updates) {
         const index = this.cache.exams.findIndex(e => e.id === id);
         if (index > -1) {
-            const old = { ...this.cache.exams[index] };
-            this.cache.exams[index] = { ...this.cache.exams[index], ...updates };
-            const { error } = await this.supabase.from('exams').update(updates).eq('id', id);
-            if (error) {
-                console.error("Supabase updateExamQuestion error:", error);
-                this.cache.exams[index] = old;
-                return false;
+            const old = this.cache.exams[index];
+            const newValues = { ...old, ...updates };
+            
+            const dbUpdates = { ...updates };
+            if (updates.hasOwnProperty('questionText') || updates.hasOwnProperty('imageUrl')) {
+                const text = updates.questionText !== undefined ? updates.questionText : old.questionText;
+                const img = updates.imageUrl !== undefined ? updates.imageUrl : old.imageUrl;
+                dbUpdates.questionText = img ? `${text}|||IMG:${img}` : text;
+                delete dbUpdates.imageUrl;
             }
+
+            this.cache.exams[index] = newValues;
+            const { error } = await this.supabase.from('exams').update(dbUpdates).eq('id', id);
+            if (error) {
+                this.cache.exams[index] = old;
+                return { success: false, error: error.message };
+            }
+            return { success: true };
         }
-        return true;
+        return { success: false, error: 'Not found' };
     },
     async deleteExamQuestion(id) {
         const index = this.cache.exams.findIndex(e => e.id === id);

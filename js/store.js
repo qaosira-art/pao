@@ -91,7 +91,10 @@ const Store = {
             if (role === 'admin' && window.AdminPortal) {
                 if (colName === 'rooms') window.AdminPortal.renderRooms();
                 if (colName === 'subjects') window.AdminPortal.renderSubjects();
-                if (colName === 'students') window.AdminPortal.renderStudents();
+                if (colName === 'students') {
+                    window.AdminPortal.renderStudents();
+                    window.AdminPortal.renderPromotion();
+                }
                 if (colName === 'exams') {
                     const el = document.getElementById('exam-subject-select');
                     if(el && el.value) window.AdminPortal.renderExams(el.value);
