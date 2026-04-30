@@ -23,6 +23,10 @@ const AdvisorPortal = {
         ['adv-filter-year', 'adv-filter-room', 'adv-filter-subject', 'adv-filter-name'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', () => {
+                if (id === 'adv-filter-year') {
+                    this.updateSubjectDropdown();
+                    this.updateRoomDropdown();
+                }
                 this.currentPage = 1;
                 this.renderTable();
             });
@@ -52,8 +56,6 @@ const AdvisorPortal = {
     loadFilters() {
         const students = Store.getStudents();
         const years = [...new Set(students.map(s => s.year.toString()))].sort((a, b) => parseInt(a) - parseInt(b));
-        const rooms = [...new Set(students.map(s => s.room.toString()))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
-        const subjects = Store.getSubjects();
 
         const yearSelect = document.getElementById('adv-filter-year');
         const currentYear = yearSelect.value;
@@ -65,26 +67,81 @@ const AdvisorPortal = {
         });
         if (years.includes(currentYear)) yearSelect.value = currentYear;
 
+        this.updateRoomDropdown();
+        this.updateSubjectDropdown();
+    },
+
+    updateRoomDropdown() {
+        const yearSelect = document.getElementById('adv-filter-year');
         const roomSelect = document.getElementById('adv-filter-room');
+        if (!roomSelect) return;
+
+        const selectedYear = yearSelect ? yearSelect.value : '';
+        const students = Store.getStudents();
         const currentRoom = roomSelect.value;
+
+        // Filter students by year and get unique rooms
+        let filteredStudents = students;
+        if (selectedYear) {
+            filteredStudents = students.filter(s => s.year.toString() === selectedYear);
+        }
+        
+        const rooms = [...new Set(filteredStudents.map(s => s.room.toString()))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+
         roomSelect.innerHTML = '<option value="">ห้อง</option>';
         rooms.forEach(r => {
             const opt = document.createElement('option');
             opt.value = r; opt.innerText = r;
             roomSelect.appendChild(opt);
         });
-        if (rooms.includes(currentRoom)) roomSelect.value = currentRoom;
 
+        // Restore previous selection if still valid
+        if (rooms.includes(currentRoom)) {
+            roomSelect.value = currentRoom;
+        } else {
+            roomSelect.value = '';
+        }
+    },
+
+    updateSubjectDropdown() {
+        const yearSelect = document.getElementById('adv-filter-year');
         const subSelect = document.getElementById('adv-filter-subject');
-        if (subSelect) {
-            const currentSub = subSelect.value;
-            subSelect.innerHTML = '<option value="">-- เลือกวิชา (จำเป็น) --</option>';
-            subjects.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub.id; opt.innerText = sub.name;
-                subSelect.appendChild(opt);
-            });
-            if (subjects.find(s => s.id === currentSub)) subSelect.value = currentSub;
+        if (!subSelect) return;
+
+        const selectedYear = yearSelect ? yearSelect.value : '';
+        const subjects = Store.getSubjects();
+        const currentSubId = subSelect.value;
+
+        // Filter subjects by year if a year is selected
+        const filteredSubjects = selectedYear 
+            ? subjects.filter(s => s.year.toString() === selectedYear)
+            : subjects;
+
+        // Sort by term (smaller first), then alphabetically
+        filteredSubjects.sort((a, b) => {
+            const termMatchA = a.name.match(/\(เทอม\s+(\d+)\)/);
+            const termMatchB = b.name.match(/\(เทอม\s+(\d+)\)/);
+            const termA = termMatchA ? parseInt(termMatchA[1]) : 0;
+            const termB = termMatchB ? parseInt(termMatchB[1]) : 0;
+            
+            if (termA !== termB) {
+                return termA - termB;
+            }
+            return a.name.localeCompare(b.name, 'th');
+        });
+
+        subSelect.innerHTML = '<option value="">-- เลือกวิชา (จำเป็น) --</option>';
+        filteredSubjects.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub.id; opt.innerText = sub.name;
+            subSelect.appendChild(opt);
+        });
+
+        // Restore previous selection if still valid
+        if (filteredSubjects.find(s => s.id === currentSubId)) {
+            subSelect.value = currentSubId;
+        } else {
+            subSelect.value = '';
         }
     },
 
@@ -166,7 +223,7 @@ const AdvisorPortal = {
                 <td style="padding: 16px; font-size: 14px;">${s.room}</td>
                 <td style="padding: 16px; font-size: 14px; font-weight: 500; text-align: center;">${s.firstName} ${s.lastName}</td>
                 <td style="padding: 16px; font-size: 14px; text-align: center;">${eligBadge}</td>
-                <td style="padding: 16px; font-size: 15px; font-weight: 600; color: #0ea5e9; text-align: center;">${scoreText}</td>
+                <td style="padding: 16px; font-size: 15px; font-weight: 600; color: var(--apple-blue); text-align: center;">${scoreText}</td>
             `;
 
             tr.innerHTML = tdHTML;

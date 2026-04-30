@@ -58,13 +58,18 @@ const AdminPortal = {
         // Subjects
         document.getElementById('form-add-subject').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('sub-name').value.trim();
+            const baseName = document.getElementById('sub-name').value.trim();
             const year = document.getElementById('sub-year').value.trim();
-            if (name && year) {
+            const term = document.getElementById('sub-term').value.trim();
+            
+            const name = `${baseName} (เทอม ${term})`;
+            
+            if (baseName && year) {
                 const result = await Store.addSubject(name, year);
                 if (result.success) {
                     document.getElementById('sub-name').value = '';
-                    document.getElementById('sub-year').value = '';
+                    document.getElementById('sub-year').value = '1';
+                    document.getElementById('sub-term').value = '1';
                     AdminPortal.renderSubjects();
                 } else {
                     App.showModal(`เกิดข้อผิดพลาด: ${result.error}`);
@@ -365,9 +370,18 @@ const AdminPortal = {
                 ? `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e3fbed; color: #1e7e46; padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">เปิด</button>` 
                 : `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e5e5ea; color: var(--apple-gray); padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">ปิด</button>`;
 
+            let displayName = s.name;
+            let termDisplay = '-';
+            const termMatch = s.name.match(/\(เทอม\s+(\d+)\)$/);
+            if (termMatch) {
+                termDisplay = termMatch[1];
+                displayName = s.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
+            }
+
             tr.innerHTML = `
-                <td>${s.name}</td>
-                <td>${s.year}</td>
+                <td>${displayName}</td>
+                <td style="text-align: center;">${s.year}</td>
+                <td style="text-align: center;">${termDisplay}</td>
                 <td style="text-align: center;">${statusBadge}</td>
                 <td style="text-align: center;">
                     <button class="btn btn-sm edit-sub-btn" data-id="${s.id}" style="background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; margin-right: 5px; padding: 4px 12px; border-radius: 6px;">แก้ไข</button>
@@ -386,14 +400,26 @@ const AdminPortal = {
                 const id = e.target.getAttribute('data-id');
                 const sub = Store.getSubjects().find(x => x.id === id);
                 
-                const newName = prompt('แก้ไขชื่อวิชา:', sub.name);
+                let currentBaseName = sub.name;
+                let currentTerm = '1';
+                const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+                if (termMatch) {
+                    currentTerm = termMatch[1];
+                    currentBaseName = sub.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
+                }
+
+                const newName = prompt('แก้ไขชื่อวิชา:', currentBaseName);
                 if (newName === null) return; // Cancelled
                 
                 const newYear = prompt('แก้ไขปี:', sub.year);
                 if (newYear === null) return; // Cancelled
+
+                const newTerm = prompt('แก้ไขเทอม:', currentTerm);
+                if (newTerm === null) return; // Cancelled
                 
-                if (newName.trim() !== '' && newYear.trim() !== '') {
-                    await Store.updateSubject(id, { name: newName.trim(), year: newYear.trim() });
+                if (newName.trim() !== '' && newYear.trim() !== '' && newTerm.trim() !== '') {
+                    const finalName = `${newName.trim()} (เทอม ${newTerm.trim()})`;
+                    await Store.updateSubject(id, { name: finalName, year: newYear.trim() });
                     AdminPortal.renderSubjects();
                 } else {
                     App.showModal('กรุณากรอกข้อมูลให้ครบถ้วน');

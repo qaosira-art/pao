@@ -380,7 +380,12 @@ h1, h2, h3, h4 {
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .header-nav-center {
-        gap: 15px;
+        gap: 12px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        justify-content: center;
     }
     .header-nav-center .nav-item {
         font-size: 11px;
@@ -417,6 +422,7 @@ h1, h2, h3, h4 {
         border-bottom: 1px solid #e5e5ea;
         padding-bottom: 10px;
         margin-bottom: 20px;
+        position: static !important;
     }
     .panel {
         width: 92% !important;
@@ -468,6 +474,37 @@ h1, h2, h3, h4 {
 
     .admin-tab {
         width: 100% !important;
+    }
+
+    .room-panels-container, .admin-form-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+    
+    .admin-form-row > div, .admin-form-row > button {
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .admin-list-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        height: auto !important;
+        gap: 12px !important;
+    }
+
+    .admin-list-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    .admin-list-actions input, .admin-list-actions button {
+        width: 100% !important;
+    }
+
+    #exam-subject-select {
+        max-width: 100% !important;
     }
 
     .choice-row {

@@ -301,32 +301,27 @@ const StudentPortal = {
 
         // Greeting
         document.getElementById('student-dash-greeting').innerText = `${user.firstName} ${user.lastName}`;
-
-        // Render eligibility badge
-        const badge = document.getElementById('student-eligibility-badge');
-        if (user.isEligible) {
-            badge.className = 'badge elig-yes';
-            badge.innerText = 'มีสิทธิ์';
-        } else {
-            badge.className = 'badge elig-no';
-            badge.innerText = 'ไม่มีสิทธิ์';
+        const infoEl = document.getElementById('student-dash-info');
+        if (infoEl) {
+            infoEl.innerText = `ชั้นปี ${user.year} ห้อง ${user.room}`;
         }
 
         const subjects = Store.getSubjects();
         const availableSubs = subjects.filter(s => s.year === user.year);
         // Kept in chronological order from Store
         
-        const listEl = document.getElementById('student-exams-list');
-        listEl.innerHTML = '';
+        const containerEl = document.getElementById('student-exams-container');
+        if (!containerEl) return;
+        containerEl.innerHTML = '';
 
         if (availableSubs.length === 0) {
-            listEl.innerHTML = '<p style="color:var(--apple-gray)">ยังไม่มีวิชาที่อยู่ในระบบ</p>';
+            containerEl.innerHTML = '<p style="color:var(--apple-gray)">ยังไม่มีวิชาที่อยู่ในระบบ</p>';
             return;
         }
 
         const scores = Store.getStudentScores(user.id);
 
-        availableSubs.forEach(sub => {
+        const renderSubjectCard = (sub) => {
             const hasTaken = scores.find(sc => sc.subjectId === sub.id);
             const questionsCount = Store.getExamsBySubject(sub.id).length;
             
@@ -343,9 +338,15 @@ const StudentPortal = {
                 ? `<span style="color: #34c759;"><span style="display: inline-block; width: 6px; height: 6px; background: #34c759; border-radius: 50%; margin-right: 4px; vertical-align: middle;"></span>เปิดสอบ</span>` 
                 : `<span style="color: #86868b;"><span style="display: inline-block; width: 6px; height: 6px; background: #86868b; border-radius: 50%; margin-right: 4px; vertical-align: middle;"></span>ปิดชั่วคราว</span>`;
 
+            let displayName = sub.name;
+            const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+            if (termMatch) {
+                displayName = sub.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
+            }
+
             const leftHtml = `
                 <div>
-                    <div style="font-weight: 700; font-size: 16px; color: #1d1d1f; margin-bottom: 4px;">${sub.name}</div>
+                    <div style="font-weight: 500; font-size: 16px; color: #1d1d1f; margin-bottom: 4px;">${displayName}</div>
                     <div style="font-size: 13px; color: #86868b; display: flex; align-items: center; gap: 12px;">
                         <span>${questionsCount} ข้อ</span>
                         ${statusDotHtml}
@@ -357,7 +358,7 @@ const StudentPortal = {
             if (hasTaken) {
                 rightHtml = `
                     <div style="text-align: right;">
-                        <div style="color: #34c759; font-size: 18px; font-weight: 700;">${hasTaken.score}/${hasTaken.total}</div>
+                        <div style="color: var(--apple-blue); font-size: 18px; font-weight: 700;">${hasTaken.score}/${hasTaken.total}</div>
                         <div style="color: #86868b; font-size: 12px; margin-top: 2px;">สอบแล้ว</div>
                     </div>
                 `;
@@ -368,12 +369,61 @@ const StudentPortal = {
             } else if (!sub.isOpen) {
                 rightHtml = `<button class="btn btn-secondary" disabled style="padding: 6px 16px; font-size: 13px;">ยังไม่เปิดสอบ</button>`;
             } else {
-                rightHtml = `<button class="btn btn-primary btn-take-exam" data-id="${sub.id}" style="padding: 8px 20px; font-size: 14px; font-weight: 600; border-radius: 8px;">เริ่มทำข้อสอบ</button>`;
+                rightHtml = `<button class="btn btn-primary btn-take-exam" data-id="${sub.id}" style="padding: 8px 20px; font-size: 14px; font-weight: 600; border-radius: 8px;">สอบ</button>`;
             }
 
             div.innerHTML = leftHtml + rightHtml;
-            listEl.appendChild(div);
+            return div;
+        };
+
+        const term1Subs = [];
+        const term2Subs = [];
+        const otherSubs = [];
+
+        availableSubs.forEach(sub => {
+            const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+            if (termMatch) {
+                if (termMatch[1] === '1') term1Subs.push(sub);
+                else if (termMatch[1] === '2') term2Subs.push(sub);
+                else otherSubs.push(sub);
+            } else {
+                otherSubs.push(sub);
+            }
         });
+
+        const renderGroupCard = (title, subs) => {
+            if (subs.length === 0) return;
+            
+            const card = document.createElement('div');
+            card.style.background = 'white';
+            card.style.borderRadius = '12px';
+            card.style.border = '1px solid #e5e5ea';
+            card.style.padding = '24px';
+
+            const header = document.createElement('h3');
+            header.innerText = title;
+            header.style.fontSize = '18px';
+            header.style.fontWeight = '700';
+            header.style.marginBottom = '20px';
+            header.style.color = '#1d1d1f';
+            card.appendChild(header);
+
+            const list = document.createElement('div');
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+            list.style.gap = '16px';
+            
+            subs.forEach(sub => {
+                list.appendChild(renderSubjectCard(sub));
+            });
+            
+            card.appendChild(list);
+            containerEl.appendChild(card);
+        };
+
+        renderGroupCard('วิชาเทอม 1', term1Subs);
+        renderGroupCard('วิชาเทอม 2', term2Subs);
+        renderGroupCard('วิชาอื่นๆ', otherSubs);
 
         document.querySelectorAll('.btn-take-exam').forEach(btn => {
             btn.addEventListener('click', (e) => {
