@@ -8,6 +8,7 @@ const App = {
         try {
             this.bindNav();
             this.initSlider();
+            FilterModal.init(); // Initialize global filter modal
             
             // Wait for Supabase to download initial caches
             await Store.initFirebase();
@@ -159,6 +160,156 @@ const App = {
         });
     }
 };
+
+// Global Filter Modal Controller
+const FilterModal = {
+    currentMode: 'student', // 'student' or 'advisor'
+
+    init() {
+        const modal = document.getElementById('filter-modal');
+        const btnClose = document.getElementById('btn-close-filter');
+        const btnApply = document.getElementById('btn-apply-filter');
+        const btnClear = document.getElementById('btn-clear-filter');
+
+        if (!modal) return;
+
+        if (btnClose) btnClose.addEventListener('click', () => this.close());
+        
+        if (btnApply) {
+            btnApply.addEventListener('click', () => {
+                if (this.currentMode === 'student') {
+                    StudentPortal.currentPage = 1;
+                    StudentPortal.renderLoginTable();
+                } else {
+                    AdvisorPortal.currentPage = 1;
+                    AdvisorPortal.renderTable();
+                }
+                this.close();
+            });
+        }
+
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                if (this.currentMode === 'student') {
+                    const fAca = document.getElementById('stu-filter-academic-year');
+                    const fYear = document.getElementById('stu-filter-year');
+                    const fRoom = document.getElementById('stu-filter-room');
+                    const fName = document.getElementById('stu-search-student');
+                    if (fAca) fAca.value = '';
+                    if (fYear) fYear.value = '';
+                    if (fRoom) fRoom.value = '';
+                    if (fName) fName.value = '';
+                    StudentPortal.loadLoginFilters();
+                    StudentPortal.renderLoginTable();
+                } else {
+                    const fAca = document.getElementById('adv-filter-academic-year');
+                    const fYear = document.getElementById('adv-filter-year');
+                    const fRoom = document.getElementById('adv-filter-room');
+                    const fSub = document.getElementById('adv-filter-subject');
+                    const fName = document.getElementById('adv-search-student');
+                    if (fAca) fAca.value = '';
+                    if (fYear) fYear.value = '';
+                    if (fRoom) fRoom.value = '';
+                    if (fSub) fSub.value = '';
+                    if (fName) fName.value = '';
+                    AdvisorPortal.loadFilters();
+                    AdvisorPortal.renderTable();
+                }
+                this.close();
+            });
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) this.close();
+        });
+    },
+
+    open(mode) {
+        this.currentMode = mode;
+        const modal = document.getElementById('filter-modal');
+        const title = document.getElementById('filter-modal-title');
+        const body = document.getElementById('filter-modal-body');
+
+        if (mode === 'student') {
+            title.innerText = '🔍 ค้นหาข้อมูลนักเรียน';
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ปีการศึกษา</label>
+                        <select id="stu-filter-academic-year" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ชั้นปี</label>
+                        <select id="stu-filter-year" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ห้อง</label>
+                        <select id="stu-filter-room" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ชื่อ - นามสกุล</label>
+                        <input type="text" id="stu-search-student" placeholder="พิมพ์ชื่อเพื่อค้นหา..." style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 16px; font-size: 15px;">
+                    </div>
+                </div>
+            `;
+            StudentPortal.loadLoginFilters();
+        } else {
+            title.innerText = '🔍 ค้นหาคะแนน (ที่ปรึกษา)';
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">วิชา</label>
+                        <select id="adv-filter-subject" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #fff; border: 1.5px solid #0071e3; padding: 0 12px; font-size: 15px; font-weight: 600; color: #0071e3;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ปีการศึกษา</label>
+                        <select id="adv-filter-academic-year" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ชั้นปี</label>
+                        <select id="adv-filter-year" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ห้อง</label>
+                        <select id="adv-filter-room" class="filter-select" style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 12px; font-size: 15px;"></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; color: #86868b; margin-bottom: 6px; font-weight: 500;">ชื่อนักเรียน</label>
+                        <input type="text" id="adv-search-student" placeholder="พิมพ์ชื่อเพื่อค้นหา..." style="width: 100%; height: 48px; border-radius: 12px; background: #f5f5f7; border: none; padding: 0 16px; font-size: 15px;">
+                    </div>
+                </div>
+            `;
+            AdvisorPortal.loadFilters();
+
+            // Bind cascading for Advisor Modal
+            const advAcaYear = document.getElementById('adv-filter-academic-year');
+            const advYear = document.getElementById('adv-filter-year');
+            if (advAcaYear) {
+                advAcaYear.onchange = () => {
+                    AdvisorPortal.updateSubjectDropdown();
+                    AdvisorPortal.updateRoomDropdown();
+                };
+            }
+            if (advYear) {
+                advYear.onchange = () => {
+                    AdvisorPortal.updateSubjectDropdown();
+                    AdvisorPortal.updateRoomDropdown();
+                };
+            }
+        }
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+    },
+
+    close() {
+        const modal = document.getElementById('filter-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // Restore scroll
+    }
+};
+
+window.FilterModal = FilterModal;
 
 window.onload = async () => {
     try { await App.init(); } catch(e) {}

@@ -4,7 +4,7 @@ const AdminPortal = {
     
     init() {
         this.bindEvents();
-        this.renderRooms();
+        this.loadFilters();
         this.renderSubjects();
         this.renderExams();
         this.renderStudents();
@@ -23,10 +23,10 @@ const AdminPortal = {
             }
         });
 
-        // Sidebar Navigation
-        document.querySelectorAll('.admin-menu-item').forEach(item => {
+        // Sidebar Navigation (Converted to Segmented Control)
+        document.querySelectorAll('.segmented-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                document.querySelectorAll('.admin-menu-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.segmented-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 const target = item.getAttribute('data-target');
                 document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
@@ -34,42 +34,29 @@ const AdminPortal = {
             });
         });
 
-        document.getElementById('btn-sidebar-logout').addEventListener('click', () => {
+        document.getElementById('btn-sidebar-logout')?.addEventListener('click', () => {
             App.logout();
         });
 
-        // Rooms
-        document.getElementById('form-add-room').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const year = document.getElementById('add-room-year').value;
-            const numberInput = document.getElementById('add-room-number-input');
-            const number = numberInput.value;
-            const name = `${year}/${number}`;
-            
-            const result = await Store.addRoom(name);
-            if (result.success) { 
-                numberInput.value = '';
-                AdminPortal.renderRooms(); 
-            } else { 
-                App.showModal(result.error === 'duplicate' ? 'มีห้องเรียนนี้อยู่แล้ว' : `เกิดข้อผิดพลาด: ${result.error}`); 
-            }
-        });
+
 
         // Subjects
         document.getElementById('form-add-subject').addEventListener('submit', async (e) => {
             e.preventDefault();
             const baseName = document.getElementById('sub-name').value.trim();
-            const year = document.getElementById('sub-year').value.trim();
+            const rawYear = document.getElementById('sub-year').value.trim();
+            const acadYear = document.getElementById('sub-acad-year').value.trim();
             const term = document.getElementById('sub-term').value.trim();
+            const year = `${rawYear} (ปี ${term}/${acadYear})`;
             
-            const name = `${baseName} (เทอม ${term})`;
+            const name = `${baseName}`; // Removed redundant (เทอม X) since it's now in the year column
             
             if (baseName && year) {
                 const result = await Store.addSubject(name, year);
                 if (result.success) {
-                    document.getElementById('sub-name').value = '';
-                    document.getElementById('sub-year').value = '1';
-                    document.getElementById('sub-term').value = '1';
+                    const modalAddSub = document.getElementById('modal-add-subject');
+                    if (modalAddSub) modalAddSub.classList.add('hidden');
+                    document.getElementById('form-add-subject').reset();
                     AdminPortal.renderSubjects();
                 } else {
                     App.showModal(`เกิดข้อผิดพลาด: ${result.error}`);
@@ -77,18 +64,83 @@ const AdminPortal = {
             }
         });
 
-        // Exams Navigation & State
-        document.getElementById('exam-subject-select').addEventListener('change', (e) => {
-            this.currentSubjectId = e.target.value;
-            this.editingId = null;
-            const builder = document.getElementById('exam-builder-container');
-            if (this.currentSubjectId) {
-                builder.classList.remove('hidden');
-                this.renderExams(this.currentSubjectId);
-            } else {
-                builder.classList.add('hidden');
-            }
+        // Filter Subjects by Academic Year
+        const filterSubAcadYear = document.getElementById('filter-subject-acad-year');
+        if (filterSubAcadYear) {
+            filterSubAcadYear.addEventListener('change', () => {
+                AdminPortal.renderSubjects();
+            });
+        }
+
+        // Add Student Modal Toggle
+        const btnOpenAddStu = document.getElementById('btn-open-add-student-modal');
+        const btnCloseAddStu = document.getElementById('btn-close-add-student-modal');
+        const btnCancelAddStu = document.getElementById('btn-cancel-add-student');
+        const modalAddStu = document.getElementById('modal-add-student');
+
+        if (btnOpenAddStu) {
+            btnOpenAddStu.addEventListener('click', () => {
+                modalAddStu.classList.remove('hidden');
+                document.getElementById('stu-acad-year').focus();
+            });
+        }
+
+        const closeModal = () => {
+            modalAddStu.classList.add('hidden');
+            document.getElementById('form-add-students').reset();
+        };
+
+        if (btnCloseAddStu) btnCloseAddStu.addEventListener('click', closeModal);
+        if (btnCancelAddStu) btnCancelAddStu.addEventListener('click', closeModal);
+
+        // Add Subject Modal Toggle
+        const btnOpenAddSub = document.getElementById('btn-open-add-subject-modal');
+        const btnCloseAddSub = document.getElementById('btn-close-add-subject-modal');
+        const btnCancelAddSub = document.getElementById('btn-cancel-add-subject');
+        const modalAddSub = document.getElementById('modal-add-subject');
+
+        if (btnOpenAddSub) {
+            btnOpenAddSub.addEventListener('click', () => {
+                modalAddSub.classList.remove('hidden');
+                document.getElementById('sub-name').focus();
+            });
+        }
+
+        const closeSubModal = () => {
+            modalAddSub.classList.add('hidden');
+            document.getElementById('form-add-subject').reset();
+        };
+
+        if (btnCloseAddSub) btnCloseAddSub.addEventListener('click', closeSubModal);
+        if (btnCancelAddSub) btnCancelAddSub.addEventListener('click', closeSubModal);
+
+        // Close Modal on Background Click
+        modalAddSub?.addEventListener('click', (e) => {
+            if (e.target === modalAddSub) closeSubModal();
         });
+
+        // Close Modal on Background Click
+        modalAddStu?.addEventListener('click', (e) => {
+            if (e.target === modalAddStu) closeModal();
+        });
+
+        // Close Exam Editor Modal
+        const closeExamModal = () => {
+            document.getElementById('modal-manage-exams').classList.add('hidden');
+            AdminPortal.currentSubjectId = null;
+            AdminPortal.editingId = null;
+        };
+
+        document.getElementById('btn-close-exam-editor')?.addEventListener('click', closeExamModal);
+        document.getElementById('btn-done-exam-editor')?.addEventListener('click', closeExamModal);
+
+        // Close Modal on Background Click
+        const modalManageExams = document.getElementById('modal-manage-exams');
+        modalManageExams?.addEventListener('click', (e) => {
+            if (e.target === modalManageExams) closeExamModal();
+        });
+
+
 
         // Add New Card Button
         document.getElementById('btn-add-new-card').addEventListener('click', async () => {
@@ -126,8 +178,12 @@ const AdminPortal = {
         // Students Adding
         document.getElementById('form-add-students').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const year = document.getElementById('stu-year').value;
-            const room = document.getElementById('stu-room').value;
+            const rawYear = document.getElementById('stu-year').value;
+            const acadYear = document.getElementById('stu-acad-year').value.trim();
+            const term = document.getElementById('stu-term').value;
+            const year = `${rawYear} (ปี ${term}/${acadYear})`;
+            const roomInput = document.getElementById('stu-room').value.trim();
+            const room = `${rawYear}/${roomInput}`;
             const text = document.getElementById('stu-names').value;
             
             const lines = text.split('\n');
@@ -153,7 +209,10 @@ const AdminPortal = {
                 }
             }
 
-            document.getElementById('stu-names').value = '';
+            // Close Modal and Reset
+            const modalAddStu = document.getElementById('modal-add-student');
+            if (modalAddStu) modalAddStu.classList.add('hidden');
+            document.getElementById('form-add-students').reset();
             AdminPortal.renderStudents();
 
             if (duplicates.length > 0) {
@@ -163,19 +222,24 @@ const AdminPortal = {
             }
         });
         
-        // Dynamic Room Filtering for Students
-        document.getElementById('stu-year').addEventListener('change', () => {
-            this.renderRooms();
-        });
+
 
         // Delete All Students (Filtered)
         document.getElementById('btn-delete-all-students').addEventListener('click', () => {
             const query = document.getElementById('search-student').value.trim().toLowerCase();
+            const filterAcadYear = document.getElementById('filter-student-acad-year').value;
             let studentsToDelete = Store.getStudents();
             
+            if (filterAcadYear) {
+                studentsToDelete = studentsToDelete.filter(s => {
+                    const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                    return match && match[1].trim() === filterAcadYear;
+                });
+            }
+
             if (query) {
                 studentsToDelete = studentsToDelete.filter(s => 
-                    s.year.toString().includes(query) || 
+                    s.year.toString().toLowerCase().includes(query) || 
                     s.room.toLowerCase().includes(query) || 
                     `${s.firstName} ${s.lastName}`.toLowerCase().includes(query)
                 );
@@ -194,8 +258,46 @@ const AdminPortal = {
             });
         });
 
-        // Student Search
+        // Delete All Subjects (Filtered)
+        document.getElementById('btn-delete-all-subjects')?.addEventListener('click', () => {
+            const query = document.getElementById('search-subject').value.trim().toLowerCase();
+            const filterAcadYear = document.getElementById('filter-subject-acad-year').value;
+            let subjectsToDelete = Store.getSubjects();
+            
+            if (filterAcadYear) {
+                subjectsToDelete = subjectsToDelete.filter(s => {
+                    const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                    return match && match[1].trim() === filterAcadYear;
+                });
+            }
+
+            if (query) {
+                subjectsToDelete = subjectsToDelete.filter(s => 
+                    s.name.toLowerCase().includes(query) || 
+                    s.year.toString().toLowerCase().includes(query)
+                );
+            }
+
+            if (subjectsToDelete.length === 0) {
+                App.showModal('ไม่พบรายวิชาที่ต้องการลบ');
+                return;
+            }
+
+            App.showModal(`ยืนยันการลบรายวิชาที่แสดงอยู่ทั้งหมดจำนวน ${subjectsToDelete.length} วิชา? (ข้อสอบที่เกี่ยวข้องจะถูกลบไปด้วย และไม่สามารถกู้คืนได้)`, async () => {
+                const deletePromises = subjectsToDelete.map(s => Store.deleteSubject(s.id));
+                await Promise.all(deletePromises);
+                AdminPortal.renderSubjects();
+                App.showModal(`ลบรายวิชาสำเร็จ ${subjectsToDelete.length} วิชา`, null);
+            });
+        });
+
+        // Student Search & Filter
         document.getElementById('search-student').addEventListener('input', () => AdminPortal.renderStudents());
+        document.getElementById('filter-student-acad-year').addEventListener('change', () => AdminPortal.renderStudents());
+
+        // Subject Search & Filter
+        document.getElementById('search-subject')?.addEventListener('input', () => AdminPortal.renderSubjects());
+        document.getElementById('filter-subject-acad-year')?.addEventListener('change', () => AdminPortal.renderSubjects());
 
         // Promotion Events
         const promoSrcYearEl = document.getElementById('promo-src-year');
@@ -206,9 +308,12 @@ const AdminPortal = {
         const btnPromo = document.getElementById('btn-promo-confirm');
         if(btnPromo) {
             btnPromo.addEventListener('click', async () => {
-                const oldYear = document.getElementById('promo-src-year').value;
-                const oldRoom = document.getElementById('promo-src-room').value;
-                const newYear = document.getElementById('promo-target-year').value;
+                const oldRawYear = document.getElementById('promo-src-year').value;
+                const newRawYear = document.getElementById('promo-target-year').value;
+                const newAcadYear = document.getElementById('promo-target-acad-year').value.trim();
+                
+                const oldYear = oldRawYear; 
+                const newYear = `${newRawYear} (ปี ${newAcadYear})`;
                 const newRoom = document.getElementById('promo-target-room').value;
 
                 if(!oldYear || !oldRoom || !newYear || !newRoom) {
@@ -246,10 +351,10 @@ const AdminPortal = {
         // Promo Target Room Population
         const targetYearSelect = document.getElementById('promo-target-year');
         if (targetYearSelect) {
-            targetYearSelect.addEventListener('change', () => {
-                const year = targetYearSelect.value;
+            targetYearSelect.addEventListener('input', () => {
+                const yearPrefix = targetYearSelect.value;
                 const targetRoomSelect = document.getElementById('promo-target-room');
-                const rooms = Store.getRooms().filter(r => r.startsWith(year + '/')).sort();
+                const rooms = Store.getRooms().filter(r => r.startsWith(yearPrefix + '/')).sort();
                 
                 targetRoomSelect.innerHTML = '<option value="">-- เลือกห้อง --</option>';
                 rooms.forEach(r => {
@@ -262,188 +367,9 @@ const AdminPortal = {
     },
 
     // Rendering Data
-    renderRooms() {
-        const rooms = Store.getRooms();
-        
-        // Numeric sort function for "Year/Number" format
-        const roomSort = (a, b) => {
-            const [yA, rA] = a.split('/').map(Number);
-            const [yB, rB] = b.split('/').map(Number);
-            if (yA !== yB) return yA - yB;
-            return rA - rB;
-        };
 
-        // Split rooms by year
-        const year1Rooms = rooms.filter(r => r.startsWith('1/')).sort(roomSort);
-        const year2Rooms = rooms.filter(r => r.startsWith('2/')).sort(roomSort);
-        
-        const populateSelect = (roomList, selectId) => {
-            const select = document.getElementById(selectId);
-            if (!select) return;
-            const currVal = select.value;
-            select.innerHTML = '<option value="">-- เลือกห้อง --</option>';
-            roomList.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r; opt.innerText = r;
-                select.appendChild(opt);
-            });
-            if (roomList.includes(currVal)) select.value = currVal;
-        };
 
-        populateSelect(year1Rooms, 'room-select-1');
-        populateSelect(year2Rooms, 'room-select-2');
-
-        // Bind deletes for dropdowns
-        ['1', '2'].forEach(yr => {
-            const btn = document.getElementById(`btn-delete-room-${yr}`);
-            const sel = document.getElementById(`room-select-${yr}`);
-            if (btn && sel) {
-                // Clear existing listeners by replacing the element (simple way for dynamic render)
-                const newBtn = btn.cloneNode(true);
-                btn.parentNode.replaceChild(newBtn, btn);
-                newBtn.addEventListener('click', async () => {
-                    const roomId = sel.value;
-                    if (!roomId) {
-                        App.showModal('กรุณาเลือกห้องที่ต้องการลบ');
-                        return;
-                    }
-                    App.showModal(`ยืนยันการลบห้อง ${roomId}?`, async () => {
-                        await Store.deleteRoom(roomId);
-                        AdminPortal.renderRooms();
-                    });
-                });
-            }
-        });
-
-        // Sync other selects
-        const syncSelect = (id, filterYear = null) => {
-            const el = document.getElementById(id);
-            if (el) {
-                const currVal = el.value;
-                el.innerHTML = '<option value="">-- เลือกห้อง --</option>';
-                rooms
-                    .filter(r => !filterYear || r.startsWith(`${filterYear}/`))
-                    .sort(roomSort)
-                    .forEach(r => {
-                        const opt = document.createElement('option');
-                        opt.value = r; opt.innerText = r;
-                        el.appendChild(opt);
-                    });
-                if (rooms.includes(currVal)) el.value = currVal;
-            }
-        };
-
-        const stuYear = document.getElementById('stu-year')?.value;
-        syncSelect('stu-room', stuYear);
-        
-        // Promotion sync
-        const promoSrcYear = document.getElementById('promo-src-year')?.value;
-        const promoTargetYear = document.getElementById('promo-target-year')?.value;
-        syncSelect('promo-src-room', promoSrcYear);
-        syncSelect('promo-target-room', promoTargetYear);
-
-        // Bind deletes
-        document.querySelectorAll('.delete-room-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.getAttribute('data-id');
-                await Store.deleteRoom(id);
-                AdminPortal.renderRooms();
-            });
-        });
-    },
-
-    renderSubjects() {
-        const subjects = Store.getSubjects();
-        const tbody = document.getElementById('subject-table-body');
-        tbody.innerHTML = '';
-        
-        const countSpan = document.getElementById('subject-count-display');
-        if (countSpan) countSpan.innerText = subjects.length;
-
-        const examSelect = document.getElementById('exam-subject-select');
-        examSelect.innerHTML = '<option value="">-- เลือกวิชา --</option>';
-
-        subjects.forEach(s => {
-            const tr = document.createElement('tr');
-            
-            const statusBadge = s.isOpen 
-                ? `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e3fbed; color: #1e7e46; padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">เปิด</button>` 
-                : `<button class="toggle-sub-btn" data-id="${s.id}" style="background: #e5e5ea; color: var(--apple-gray); padding: 4px 0; width: 50px; display: inline-block; text-align: center; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; outline: none;">ปิด</button>`;
-
-            let displayName = s.name;
-            let termDisplay = '-';
-            const termMatch = s.name.match(/\(เทอม\s+(\d+)\)$/);
-            if (termMatch) {
-                termDisplay = termMatch[1];
-                displayName = s.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
-            }
-
-            tr.innerHTML = `
-                <td>${displayName}</td>
-                <td style="text-align: center;">${s.year}</td>
-                <td style="text-align: center;">${termDisplay}</td>
-                <td style="text-align: center;">${statusBadge}</td>
-                <td style="text-align: center;">
-                    <button class="btn btn-sm edit-sub-btn" data-id="${s.id}" style="background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; margin-right: 5px; padding: 4px 12px; border-radius: 6px;">แก้ไข</button>
-                    <button class="btn btn-sm delete-sub-btn" data-id="${s.id}" style="background: #ff3b30; color: white; border: none; padding: 4px 12px; border-radius: 6px;">ลบ</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-
-            const opt = document.createElement('option');
-            opt.value = s.id; opt.innerText = s.name;
-            examSelect.appendChild(opt);
-        });
-
-        document.querySelectorAll('.edit-sub-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                const sub = Store.getSubjects().find(x => x.id === id);
-                
-                let currentBaseName = sub.name;
-                let currentTerm = '1';
-                const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
-                if (termMatch) {
-                    currentTerm = termMatch[1];
-                    currentBaseName = sub.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
-                }
-
-                const newName = prompt('แก้ไขชื่อวิชา:', currentBaseName);
-                if (newName === null) return; // Cancelled
-                
-                const newYear = prompt('แก้ไขปี:', sub.year);
-                if (newYear === null) return; // Cancelled
-
-                const newTerm = prompt('แก้ไขเทอม:', currentTerm);
-                if (newTerm === null) return; // Cancelled
-                
-                if (newName.trim() !== '' && newYear.trim() !== '' && newTerm.trim() !== '') {
-                    const finalName = `${newName.trim()} (เทอม ${newTerm.trim()})`;
-                    await Store.updateSubject(id, { name: finalName, year: newYear.trim() });
-                    AdminPortal.renderSubjects();
-                } else {
-                    App.showModal('กรุณากรอกข้อมูลให้ครบถ้วน');
-                }
-            });
-        });
-
-        document.querySelectorAll('.toggle-sub-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                const sub = Store.getSubjects().find(x => x.id === id);
-                await Store.updateSubject(id, { isOpen: !sub.isOpen });
-                AdminPortal.renderSubjects();
-            });
-        });
-
-        document.querySelectorAll('.delete-sub-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.getAttribute('data-id');
-                await Store.deleteSubject(id);
-                AdminPortal.renderSubjects();
-            });
-        });
-    },
+    // Duplicated renderSubjects removed for cleanliness. Use the one defined below at line 600.
 
     renderExams(subjectId) {
         if (!subjectId) return;
@@ -457,48 +383,45 @@ const AdminPortal = {
             const card = document.createElement('div');
             card.className = 'exam-card';
             card.style.cssText = `
-                background: white; 
-                border: 1px solid #e5e5ea; 
+                background: #fff; 
                 border-radius: 12px; 
-                padding: ${isEditing ? '24px' : '20px 24px'}; 
+                padding: 24px; 
                 position: relative; 
                 cursor: ${isEditing ? 'default' : 'pointer'};
-                transition: all 0.2s ease;
-                ${isEditing ? 'border-left: 6px solid #0ea5e9; box-shadow: 0 4px 20px rgba(0,0,0,0.08);' : 'box-shadow: none;'}
+                border: 1px solid ${isEditing ? '#0071e3' : '#d2d2d7'};
+                box-shadow: ${isEditing ? '0 10px 30px rgba(0,0,0,0.1)' : 'none'};
+                transition: transform 0.1s ease;
             `;
             
             if (isEditing) {
                 // EDIT MODE
                 card.innerHTML = `
-                    <div style="margin-bottom: 24px;">
-                        <textarea class="edit-q-text" placeholder="พิมพ์คำถามที่นี่..." rows="2" style="width: 100%; border: none; border-bottom: 1px solid #e5e5ea; padding: 10px 0; font-family: inherit; font-size: 16px; font-weight: 600; outline: none; resize: none; background: #fafafa; padding: 12px; border-radius: 8px;">${ex.questionText}</textarea>
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span style="font-size: 13px; font-weight: 700; color: #000;">ข้อที่ ${idx + 1}</span>
+                            <button class="btn-card-delete" style="background: none; border: none; cursor: pointer; color: #ff3b30; font-size: 12px; font-weight: 600;">ลบข้อสอบ</button>
+                        </div>
+                        <textarea class="edit-q-text" placeholder="พิมพ์คำถาม..." rows="2" style="width: 100%; border: 1px solid #d2d2d7; border-radius: 8px; padding: 12px; font-family: inherit; font-size: 15px; outline: none; background: #fff;">${ex.questionText}</textarea>
                         
-                        <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px;">
+                        <div style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
                             <input type="file" class="card-image-input hidden" accept="image/*">
-                            <button class="btn-card-upload-img" style="background: #f5f5f7; border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer;">🖼️ ${ex.imageUrl ? 'เปลี่ยนรูป' : 'ใส่รูปภาพ'}</button>
+                            <button class="btn-card-upload-img" style="background: #f5f5f7; border: 1px solid #d2d2d7; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer;">🖼️ เพิ่มรูป</button>
                             <div class="card-img-preview-wrap ${ex.imageUrl && ex.imageUrl.trim() !== '' ? '' : 'hidden'}" style="position: relative;">
-                                <img src="${ex.imageUrl || ''}" onerror="this.parentElement.classList.add('hidden')" style="height: 50px; border-radius: 6px; border: 1px solid #e5e5ea;">
-                                <button class="btn-card-remove-img" style="position: absolute; top: -8px; right: -8px; background: #ff3b30; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer;">×</button>
+                                <img src="${ex.imageUrl || ''}" onerror="this.parentElement.classList.add('hidden')" style="height: 40px; border-radius: 4px; border: 1px solid #d2d2d7;">
+                                <button class="btn-card-remove-img" style="position: absolute; top: -5px; right: -5px; background: #000; color: #fff; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; cursor: pointer;">×</button>
                             </div>
                         </div>
                     </div>
-                    <div class="edit-choices-list" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                    <div class="edit-choices-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                         ${ex.choices.map((c, i) => `
-                            <div style="display: flex; align-items: center; gap: 12px; background: #fff; padding: 4px; border-radius: 10px;">
-                                <label class="radio-custom-container" style="margin: 0; padding: 0;">
-                                    <input type="radio" name="correct_${ex.id}" value="${i}" ${ex.correctIndex === i ? 'checked' : ''}>
-                                    <span class="radio-custom-mark"></span>
-                                </label>
-                                <input type="text" class="edit-choice-input" data-index="${i}" value="${c}" placeholder="ตัวเลือก ${['ก','ข','ค','ง'][i]}" style="flex: 1; border: 1px solid #e5e5ea; border-radius: 8px; padding: 10px 14px; outline: none; font-size: 14px; background: #fff;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="radio" name="correct_${ex.id}" value="${i}" ${ex.correctIndex === i ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+                                <input type="text" class="edit-choice-input" data-index="${i}" value="${c}" placeholder="ตัวเลือก ${['ก','ข','ค','ง'][i]}" style="flex: 1; border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; outline: none; font-size: 14px;">
                             </div>
                         `).join('')}
                     </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f5f5f7; padding-top: 20px;">
-                        <button class="btn-card-delete" style="background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" title="ลบข้อนี้">
-                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="#ff3b30" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                        </button>
-                        <div style="flex: 1;"></div>
-                        <button class="btn-card-save" style="background: #0ea5e9; color: white; border: none; border-radius: 8px; padding: 8px 24px; font-weight: 700; font-size: 13px; cursor: pointer;">บันทึก</button>
+                    <div style="display: flex; justify-content: flex-end; border-top: 1px solid #f2f2f7; padding-top: 15px;">
+                        <button class="btn-card-save" style="background: #0071e3; color: white; border: none; border-radius: 8px; padding: 8px 25px; font-weight: 600; font-size: 14px; cursor: pointer;">บันทึกข้อนี้</button>
                     </div>
                 `;
                 
@@ -539,18 +462,19 @@ const AdminPortal = {
             } else {
                 // VIEW MODE
                 card.innerHTML = `
-                    <div style="font-size: 16px; font-weight: 600; color: #1d1d1f; margin-bottom: 12px;">
-                        ${idx + 1}. ${ex.questionText || '<span style="color: #86868b; font-weight: 400; font-style: italic;">ไม่ได้ระบุคำถาม...</span>'}
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; font-weight: 700; color: #86868b;">ข้อที่ ${idx + 1}</span>
+                        <span style="font-size: 12px; color: #0071e3; font-weight: 600;">แก้ไข</span>
                     </div>
-                    ${(ex.imageUrl && ex.imageUrl.trim() !== '') ? `<img src="${ex.imageUrl}" onerror="this.style.display='none'" style="max-width: 200px; max-height: 150px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e5ea;">` : ''}
+                    <div style="font-size: 15px; font-weight: 600; color: #000; margin-bottom: 15px; line-height: 1.4;">
+                        ${ex.questionText || '<span style="color: #bfbfbf;">(ไม่ได้ระบุคำถาม)</span>'}
+                    </div>
+                    ${(ex.imageUrl && ex.imageUrl.trim() !== '') ? `<img src="${ex.imageUrl}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 150px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e5ea;">` : ''}
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         ${ex.choices.map((c, i) => `
-                            <div style="font-size: 14px; color: ${ex.correctIndex === i ? '#0071e3' : '#48484a'}; font-weight: ${ex.correctIndex === i ? '600' : '400'}; display: flex; align-items: center; gap: 12px; padding: 4px 0;">
-                                <div class="radio-custom-container">
-                                    <input type="radio" disabled ${ex.correctIndex === i ? 'checked' : ''}>
-                                    <span class="radio-custom-mark" style="${ex.correctIndex === i ? 'border-color: #0071e3;' : ''}"></span>
-                                </div>
-                                <span style="margin-left: -4px;">${['ก.','ข.','ค.','ง.'][i]} ${c || '-'}</span>
+                            <div style="font-size: 14px; color: ${ex.correctIndex === i ? '#0071e3' : '#333'}; font-weight: ${ex.correctIndex === i ? '700' : '400'}; padding: 4px 0; display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid ${ex.correctIndex === i ? '#0071e3' : '#d2d2d7'}; background: ${ex.correctIndex === i ? '#0071e3' : 'transparent'}; flex-shrink: 0;"></div>
+                                <span>${['ก.', 'ข.', 'ค.', 'ง.'][i]} ${c || '-'}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -566,11 +490,168 @@ const AdminPortal = {
         });
     },
 
+    renderSubjects() {
+        let subjects = Store.getSubjects();
+        const filterEl = document.getElementById('filter-subject-acad-year');
+        const filterVal = filterEl ? filterEl.value : '';
+
+        // Populate filter options if needed
+        if (filterEl) {
+            const acadYears = new Set();
+            Store.getSubjects().forEach(s => {
+                const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                if (match && match[1]) acadYears.add(match[1]);
+            });
+            const sortedYears = Array.from(acadYears).sort((a, b) => b - a);
+            
+            const currentVal = filterEl.value;
+            filterEl.innerHTML = '<option value="">ทุกปีการศึกษา</option>';
+            sortedYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.innerText = y;
+                opt.style.textAlign = 'center';
+                filterEl.appendChild(opt);
+            });
+            filterEl.value = currentVal;
+        }
+
+        // Apply filtering
+        if (filterVal) {
+            subjects = subjects.filter(s => {
+                const match = s.year ? s.year.toString().match(/\(ปี\s*(\d+)\)/) : null;
+                return match && match[1] === filterVal;
+            });
+        }
+
+        const tbody = document.getElementById('subject-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const countSpan = document.getElementById('subject-count-display');
+        if (countSpan) countSpan.innerText = subjects.length;
+
+        subjects.forEach(s => {
+            const tr = document.createElement('tr');
+            
+            const acadYearMatch = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+            const combinedTermYear = acadYearMatch ? acadYearMatch[1] : '-';
+            const yearLevelDisplay = s.year.toString().split(' ')[0];
+            const cleanName = s.name.replace(/\s*\(เทอม\s*\d+\)$/, '');
+
+            tr.innerHTML = `
+                <td style="text-align: center; color: #1d1d1f; font-weight: 500;">${combinedTermYear}</td>
+                <td style="text-align: center;">
+                    <a href="javascript:void(0)" class="manage-exams-link" data-id="${s.id}" data-name="${s.name}" style="color: #0071e3; font-weight: 600; text-decoration: none; transition: all 0.2s;">
+                        ${cleanName}
+                    </a>
+                </td>
+                <td style="text-align: center; color: #1d1d1f;">${yearLevelDisplay}</td>
+                <td style="text-align: center;">
+                    <button class="btn toggle-subject-btn" data-id="${s.id}" style="background: ${s.isOpen ? '#e3fbed' : '#f5f5f7'}; color: ${s.isOpen ? '#1e7e46' : '#6e6e73'}; padding: 4px 12px; border-radius: 12px; font-weight: 600; font-size: 11px; border: none; cursor: pointer;">
+                        ${s.isOpen ? 'เปิด' : 'ปิด'}
+                    </button>
+                </td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                        <button class="btn btn-sm edit-subject-btn" data-id="${s.id}" style="background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; padding: 7px 12px; border-radius: 8px; font-weight: 500; font-size: 12px; cursor: pointer;">แก้ไข</button>
+                        <button class="btn btn-sm delete-subject-btn" data-id="${s.id}" style="background: #fff; color: #ff3b30; border: 1px solid #ff3b30; padding: 7px 12px; border-radius: 8px; font-weight: 500; font-size: 12px; cursor: pointer;">ลบ</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Bind Subject Status Toggle - Update cache & UI in-place immediately
+        document.querySelectorAll('.toggle-subject-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const sub = Store.getSubjects().find(x => x.id === id);
+                if (!sub) return;
+
+                const newIsOpen = !sub.isOpen;
+                // Update local cache immediately to prevent stale state
+                sub.isOpen = newIsOpen;
+
+                // Update button UI in-place (no re-render needed)
+                const btnEl = e.currentTarget;
+                btnEl.style.background = newIsOpen ? '#e3fbed' : '#f5f5f7';
+                btnEl.style.color = newIsOpen ? '#1e7e46' : '#6e6e73';
+                btnEl.innerText = newIsOpen ? 'เปิด' : 'ปิด';
+
+                // Fire DB update (no await - realtime will confirm)
+                Store.updateSubject(id, { isOpen: newIsOpen });
+            });
+        });
+
+        // Bind Edit Subject Button
+        document.querySelectorAll('.edit-subject-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                const s = Store.getSubjects().find(x => x.id === id);
+                if (!s) return;
+
+                const acadYearMatch = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                const currentAcadYear = acadYearMatch ? acadYearMatch[1] : '';
+                const currentYearLevel = s.year.toString().split(' ')[0];
+                const currentName = s.name.split(' (เทอม')[0];
+                const currentTermMatch = s.name.match(/\(เทอม\s*(\d+)\)/);
+                const currentTerm = currentTermMatch ? currentTermMatch[1] : '1';
+
+                const newFullAcadYear = prompt('แก้ไขเทอม/ปีการศึกษา (เช่น 1/2567):', currentAcadYear);
+                if (newFullAcadYear === null) return;
+
+                const newName = prompt('แก้ไขชื่อวิชา:', currentName);
+                if (newName === null) return;
+
+                const newYearLevel = prompt('แก้ไขชั้นปี:', currentYearLevel);
+                if (newYearLevel === null) return;
+
+                const updatedFullYear = `${newYearLevel.trim()} (ปี ${newFullAcadYear.trim()})`;
+                const updatedFullName = newName.trim(); // Name no longer needs (เทอม X) appended separately
+
+                await Store.updateSubject(id, { 
+                    name: updatedFullName,
+                    year: updatedFullYear
+                });
+                AdminPortal.renderSubjects();
+            });
+        });
+
+        document.querySelectorAll('.delete-subject-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                App.showModal('ยืนยันการลบวิชานี้และข้อสอบทั้งหมดในวิชา?', async () => {
+                    await Store.deleteSubject(id);
+                    AdminPortal.renderSubjects();
+                });
+            });
+        });
+
+        // Bind Manage Exams Link (Subject Name)
+        document.querySelectorAll('.manage-exams-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const name = e.currentTarget.getAttribute('data-name');
+                AdminPortal.currentSubjectId = id;
+                AdminPortal.editingId = null;
+                
+                document.getElementById('editing-subject-title').innerText = `จัดการข้อสอบ: ${name}`;
+                document.getElementById('modal-manage-exams').classList.remove('hidden');
+                AdminPortal.renderExams(id);
+            });
+        });
+    },
+
     async saveCard(id, cardEl) {
         const qText = cardEl.querySelector('.edit-q-text').value.trim();
         const choices = Array.from(cardEl.querySelectorAll('.edit-choice-input')).map(input => input.value.trim());
         const correctRadio = cardEl.querySelector(`input[name="correct_${id}"]:checked`);
-        const imageUrl = cardEl.querySelector('img').src;
+        
+        // Only get imageUrl if the preview wrap is NOT hidden
+        const previewWrap = cardEl.querySelector('.card-img-preview-wrap');
+        const hasImage = previewWrap && !previewWrap.classList.contains('hidden');
+        const imageUrl = hasImage ? cardEl.querySelector('img').src : null;
 
         if (!qText) {
             App.showModal('กรุณากรอกคำถาม');
@@ -581,25 +662,66 @@ const AdminPortal = {
             questionText: qText,
             choices: choices,
             correctIndex: correctRadio ? parseInt(correctRadio.value) : 0,
-            imageUrl: imageUrl || null
+            imageUrl: imageUrl
         };
 
-        const success = await Store.updateExamQuestion(id, updates);
-        if (success) {
+        const result = await Store.updateExamQuestion(id, updates);
+        if (result === true || (result && result.success)) {
             AdminPortal.editingId = null;
             AdminPortal.renderExams(AdminPortal.currentSubjectId);
         } else {
-            App.showModal('เกิดข้อผิดพลาดในการบันทึก');
+            const errorMsg = (result && result.error) ? `: ${result.error}` : '';
+            App.showModal(`เกิดข้อผิดพลาดในการบันทึก${errorMsg}`);
         }
     },
 
     renderStudents() {
         const students = Store.getStudents();
         const search = document.getElementById('search-student').value.trim().toLowerCase();
+        const filterAcadYearEl = document.getElementById('filter-student-acad-year');
+        const filterAcadYear = filterAcadYearEl ? filterAcadYearEl.value : '';
+        
+        // Extract unique academic years from student records
+        const acadYears = new Set();
+        students.forEach(s => {
+            const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+            if (match && match[1]) {
+                acadYears.add(match[1]);
+            }
+        });
+        const sortedAcadYears = Array.from(acadYears).sort((a, b) => parseInt(b) - parseInt(a));
+        
+        // Populate dropdown if not already populated correctly
+        if (filterAcadYearEl) {
+            const currentVal = filterAcadYearEl.value;
+            filterAcadYearEl.innerHTML = '<option value="">ทุกปีการศึกษา</option>';
+            sortedAcadYears.forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.innerText = year;
+                opt.style.textAlign = 'center';
+                filterAcadYearEl.appendChild(opt);
+            });
+            // Restore selection if valid
+            if (sortedAcadYears.includes(currentVal)) {
+                filterAcadYearEl.value = currentVal;
+            }
+        }
         
         let filtered = students;
+        
+        // Apply Academic Year Filter
+        if (filterAcadYear) {
+            filtered = filtered.filter(s => {
+                const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                const acaYearOnly = match ? match[1].split('/').pop() : ''; 
+                return acaYearOnly === filterAcadYear || (match && match[1] === filterAcadYear);
+            });
+        }
+
+        // Apply Search Text Filter
         if (search) {
-            filtered = students.filter(s => 
+            filtered = filtered.filter(s => 
                 s.year.toString().includes(search) || 
                 s.room.toLowerCase().includes(search) || 
                 `${s.firstName} ${s.lastName}`.toLowerCase().includes(search)
@@ -620,18 +742,25 @@ const AdminPortal = {
                 ? `<span style="background: #e3fbed; color: #1e7e46; padding: 4px 0; width: 54px; display: inline-block; text-align: center; border-radius: 12px; font-weight: 600; font-size: 13px;">มี</span>`
                 : `<span style="background: #f5f5f7; color: #6e6e73; padding: 4px 0; width: 54px; display: inline-block; text-align: center; border-radius: 12px; font-weight: 600; font-size: 13px;">ไม่มี</span>`;
 
+            const acadYearMatch = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+            const acadYearDisplay = acadYearMatch ? acadYearMatch[1] : '-';
+            const yearLevelDisplay = s.year.toString().split(' ')[0];
+
             tr.innerHTML = `
-                <td style="padding: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.year}</td>
-                <td style="padding: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.room}</td>
-                <td style="padding: 16px; font-weight: 500; color: #1d1d1f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.firstName} ${s.lastName}</td>
-                <td style="padding: 16px; text-align: center;">
+                <td style="text-align: center; color: #1d1d1f; font-weight: 500;">${acadYearDisplay}</td>
+                <td style="text-align: center; color: #1d1d1f;">${yearLevelDisplay}</td>
+                <td style="text-align: center; color: #1d1d1f;">${s.room}</td>
+                <td style="text-align: center; color: #1d1d1f; font-weight: 500;">${s.firstName} ${s.lastName}</td>
+                <td style="text-align: center;">
                     <button class="toggle-elig-btn" data-id="${s.id}" style="border:none; cursor:pointer; background:none; padding:0;">
                         ${eligBadge}
                     </button>
                 </td>
-                <td style="padding: 16px; text-align: center;">
-                    <button class="btn btn-sm edit-stu-btn" data-id="${s.id}" style="background: #e5e5ea; color: #1d1d1f; border: none; margin-right: 5px; padding: 6px 14px; border-radius: 6px; font-weight: 500;">แก้ไข</button>
-                    <button class="btn btn-sm delete-stu-btn" data-id="${s.id}" style="background: #ff3b30; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 500;">ลบ</button>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                        <button class="btn btn-sm edit-stu-btn" data-id="${s.id}" style="background: #f5f5f7; color: #1d1d1f; border: 1px solid #d2d2d7; padding: 7px 12px; border-radius: 8px; font-weight: 500; font-size: 12px; cursor: pointer;">แก้ไข</button>
+                        <button class="btn btn-sm delete-stu-btn" data-id="${s.id}" style="background: #fff; color: #ff3b30; border: 1px solid #ff3b30; padding: 7px 12px; border-radius: 8px; font-weight: 500; font-size: 12px; cursor: pointer;">ลบ</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -643,11 +772,22 @@ const AdminPortal = {
                 const st = Store.getStudents().find(x => x.id === id);
                 if (!st) return;
 
-                const newYear = prompt('แก้ไขปี:', st.year);
-                if (newYear === null) return;
+                // Extract current parts
+                const currentYearLevel = st.year.toString().split(' ')[0];
+                const currentAcadYearMatch = st.year.toString().match(/\(ปี\s*([^)]+)\)/);
+                const currentFullAcadYear = currentAcadYearMatch ? currentAcadYearMatch[1] : '';
 
-                const newRoom = prompt('แก้ไขห้อง:', st.room);
-                if (newRoom === null) return;
+                const newFullAcadYear = prompt('แก้ไขเทอม/ปีการศึกษา (เช่น 1/2567):', currentFullAcadYear);
+                if (newFullAcadYear === null) return;
+
+                const newYearLevel = prompt('แก้ไขชั้นปี:', currentYearLevel);
+                if (newYearLevel === null) return;
+
+                const newFullYear = `${newYearLevel.trim()} (ปี ${newFullAcadYear.trim()})`;
+
+                const newRoomInput = prompt('แก้ไขห้อง:', st.room.split('/')[1] || st.room);
+                if (newRoomInput === null) return;
+                const newRoom = `${newYearLevel.trim()}/${newRoomInput.trim()}`;
 
                 const newName = prompt('แก้ไขชื่อ-นามสกุล:', `${st.firstName} ${st.lastName}`);
                 if (newName === null) return;
@@ -659,7 +799,7 @@ const AdminPortal = {
                         const last = parts.slice(1).join(' ');
                         
                         await Store.updateStudent(id, { 
-                            year: newYear.trim(),
+                            year: newFullYear,
                             room: newRoom.trim(),
                             firstName: first, 
                             lastName: last 
@@ -673,13 +813,26 @@ const AdminPortal = {
         });
 
         document.querySelectorAll('.toggle-elig-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+            btn.addEventListener('click', (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
                 const st = Store.getStudents().find(x => x.id === id);
-                if (st) {
-                    await Store.updateStudentEligibility(id, !st.isEligible);
-                    AdminPortal.renderStudents();
+                if (!st) return;
+
+                const newIsEligible = !st.isEligible;
+                // Update local cache immediately to prevent stale state
+                st.isEligible = newIsEligible;
+
+                // Update badge UI in-place (no re-render needed)
+                const btnEl = e.currentTarget;
+                const badge = btnEl.querySelector('span');
+                if (badge) {
+                    badge.style.background = newIsEligible ? '#e3fbed' : '#f5f5f7';
+                    badge.style.color = newIsEligible ? '#1e7e46' : '#6e6e73';
+                    badge.innerText = newIsEligible ? 'มี' : 'ไม่มี';
                 }
+
+                // Fire DB update (no await - realtime will confirm)
+                Store.updateStudentEligibility(id, newIsEligible);
             });
         });
 
@@ -701,7 +854,12 @@ const AdminPortal = {
         const selectedYear = yearSelect?.value;
 
         const rooms = [...new Set(students.map(s => s.room ?? s.Room))]
-            .filter(r => r != null && (!selectedYear || r.toString().startsWith(selectedYear + '/')))
+            .filter(r => {
+                if (!r) return false;
+                if (!selectedYear) return true;
+                const yearPrefix = selectedYear.toString().split(' ')[0];
+                return r.toString().startsWith(yearPrefix + '/');
+            })
             .sort((a, b) => a.toString().localeCompare(b.toString(), 'th', { numeric: true }));
 
         if(yearSelect) {
@@ -744,6 +902,49 @@ const AdminPortal = {
             countBox.innerText = 'กรุณาเลือกชั้นปีและห้องเรียน';
             countBox.style.background = '#f5f5f7';
             countBox.style.borderColor = '#d2d2d7';
+        }
+    },
+
+    loadFilters() {
+        const students = Store.getStudents();
+        const subjects = Store.getSubjects();
+
+        // Academic Years for Students
+        const stuAcadYears = new Set();
+        students.forEach(s => {
+            const match = s.year ? s.year.toString().match(/\(ปี\s*(\d+)\)/) : null;
+            if (match) stuAcadYears.add(match[1]);
+        });
+        
+        const stuFilter = document.getElementById('filter-student-acad-year');
+        if (stuFilter) {
+            const current = stuFilter.value;
+            stuFilter.innerHTML = '<option value="">ทุกปีการศึกษา</option>';
+            Array.from(stuAcadYears).sort((a, b) => b - a).forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                stuFilter.appendChild(opt);
+            });
+            stuFilter.value = current;
+        }
+
+        // Academic Years for Subjects
+        const subAcadYears = new Set();
+        subjects.forEach(s => {
+            const match = s.year ? s.year.toString().match(/\(ปี\s*(\d+)\)/) : null;
+            if (match) subAcadYears.add(match[1]);
+        });
+
+        const subFilter = document.getElementById('filter-subject-acad-year');
+        if (subFilter) {
+            const current = subFilter.value;
+            subFilter.innerHTML = '<option value="">ทุกปีการศึกษา</option>';
+            Array.from(subAcadYears).sort((a, b) => b - a).forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                subFilter.appendChild(opt);
+            });
+            subFilter.value = current;
         }
     }
 };

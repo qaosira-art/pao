@@ -15,14 +15,13 @@ const StudentPortal = {
     },
 
     bindEvents() {
-        // Filter event listeners for Login screen
-        ['stu-filter-year', 'stu-filter-room', 'stu-filter-name'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('input', () => {
-                this.currentPage = 1;
-                this.renderLoginTable();
+        // Filter Button
+        const btnOpenFilter = document.getElementById('btn-open-student-filter');
+        if (btnOpenFilter) {
+            btnOpenFilter.addEventListener('click', () => {
+                FilterModal.open('student');
             });
-        });
+        }
 
         // Exam Submission & Controls
         const btnSubmit = document.getElementById('btn-submit-exam');
@@ -150,22 +149,57 @@ const StudentPortal = {
             this.renderDashboard();
         }
     },
-
     loadLoginFilters() {
         const students = Store.getStudents();
-        const years = [...new Set(students.map(s => s.year))].sort((a, b) => parseInt(a) - parseInt(b));
+        
+        // Extract academic years using regex from s.year string
+        const acadYearsSet = new Set();
+        students.forEach(s => {
+            const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+            if (match && match[1]) acadYearsSet.add(match[1]);
+            else if (s.academicYear) acadYearsSet.add(s.academicYear.toString());
+        });
+        const academicYears = Array.from(acadYearsSet).sort((a, b) => parseInt(b) - parseInt(a));
+
+        const years = [...new Set(students.map(s => s.year.toString().split(' ')[0]))].sort((a, b) => parseInt(a) - parseInt(b));
         const rooms = [...new Set(students.map(s => s.room))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+
+        const acaYearSelect = document.getElementById('stu-filter-academic-year');
+        if(acaYearSelect) {
+            const currentVal = acaYearSelect.value;
+            acaYearSelect.innerHTML = '<option value="">ปีการศึกษา</option>';
+            academicYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                acaYearSelect.appendChild(opt);
+            });
+            if (academicYears.includes(currentVal)) acaYearSelect.value = currentVal;
+            
+            acaYearSelect.onchange = () => {
+                this.updateCascadingFilters();
+            };
+        }
 
         const yearSelect = document.getElementById('stu-filter-year');
         if(yearSelect) {
             const currentYear = yearSelect.value;
-            yearSelect.innerHTML = '<option value="">ปี</option>';
-            years.forEach(y => {
+            yearSelect.innerHTML = '<option value="">ชั้นปี</option>';
+            
+            // Get unique cleaned grades
+            const cleanedGrades = [...new Set(years.map(y => y.toString().split(' ')[0]))]
+                .sort((a, b) => parseInt(a) - parseInt(b));
+
+            cleanedGrades.forEach(cg => {
                 const opt = document.createElement('option');
-                opt.value = y; opt.innerText = y;
+                opt.value = cg; 
+                opt.innerText = cg;
                 yearSelect.appendChild(opt);
             });
-            if (years.includes(currentYear)) yearSelect.value = currentYear;
+            if (cleanedGrades.includes(currentYear)) yearSelect.value = currentYear;
+
+            yearSelect.onchange = () => {
+                this.updateCascadingFilters();
+            };
         }
 
         const roomSelect = document.getElementById('stu-filter-room');
@@ -181,15 +215,54 @@ const StudentPortal = {
         }
     },
 
+    updateCascadingFilters() {
+        const students = Store.getStudents();
+        const fAcaYear = document.getElementById('stu-filter-academic-year') ? document.getElementById('stu-filter-academic-year').value : '';
+        const fYear = document.getElementById('stu-filter-year') ? document.getElementById('stu-filter-year').value : '';
+        
+        let filtered = students;
+        if (fAcaYear) {
+            filtered = filtered.filter(s => {
+                const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                const acaYear = match ? match[1] : (s.academicYear ? s.academicYear.toString() : '');
+                return acaYear === fAcaYear;
+            });
+        }
+        if (fYear) {
+            filtered = filtered.filter(s => s.year.toString().startsWith(fYear));
+        }
+
+        const rooms = [...new Set(filtered.map(s => s.room))].sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+        const roomSelect = document.getElementById('stu-filter-room');
+        if (roomSelect) {
+            const current = roomSelect.value;
+            roomSelect.innerHTML = '<option value="">ห้อง</option>';
+            rooms.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.innerText = r;
+                roomSelect.appendChild(opt);
+            });
+            if (rooms.includes(current)) roomSelect.value = current;
+        }
+    },
+
     renderLoginTable() {
         let students = Store.getStudents();
 
         // Filters
+        const fAcaYear = document.getElementById('stu-filter-academic-year') ? document.getElementById('stu-filter-academic-year').value : '';
         const fYear = document.getElementById('stu-filter-year') ? document.getElementById('stu-filter-year').value : '';
         const fRoom = document.getElementById('stu-filter-room') ? document.getElementById('stu-filter-room').value : '';
         const fName = document.getElementById('stu-filter-name') ? document.getElementById('stu-filter-name').value.trim().toLowerCase() : '';
 
-        if (fYear) students = students.filter(s => s.year.toString() === fYear);
+        if (fAcaYear) {
+            students = students.filter(s => {
+                const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                const acaYear = match ? match[1] : (s.academicYear ? s.academicYear.toString() : '');
+                return acaYear === fAcaYear;
+            });
+        }
+        if (fYear) students = students.filter(s => s.year.toString().startsWith(fYear));
         if (fRoom) students = students.filter(s => s.room.toString() === fRoom);
         if (fName) students = students.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(fName));
 
@@ -209,7 +282,7 @@ const StudentPortal = {
         tbody.innerHTML = '';
         
         if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--apple-gray);">ไม่พบข้อมูลที่ตรงกัน</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #86868b;">ไม่พบข้อมูลนักเรียนที่ตรงกัน</td></tr>`;
             if (document.getElementById('stu-login-pagination')) {
                 document.getElementById('stu-login-pagination').innerHTML = '';
             }
@@ -218,13 +291,22 @@ const StudentPortal = {
 
         paginatedStudents.forEach(s => {
             const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #f2f2f7';
+            
+            const displayGrade = s.year.toString().split(' ')[0];
+            const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+            const displayAcaYear = match ? match[1] : (s.academicYear || '-');
             
             let tdHTML = `
-                <td style="padding: 16px; font-size: 14px;">${s.year}</td>
-                <td style="padding: 16px; font-size: 14px;">${s.room}</td>
-                <td style="padding: 16px; font-size: 14px; font-weight: 500; text-align: center;">${s.firstName} ${s.lastName}</td>
-                <td style="padding: 16px; font-size: 14px; text-align: right;">
-                    <button class="btn btn-primary btn-select-student" style="padding: 6px 16px; font-size: 13px;" data-id="${s.id}">เลือก</button>
+                <td style="padding: 12px; text-align: center; color: #1d1d1f; font-weight: 500;">${displayAcaYear}</td>
+                <td style="padding: 12px; text-align: center; color: #1d1d1f;">${displayGrade}</td>
+                <td style="padding: 12px; text-align: center; color: #1d1d1f;">${s.room}</td>
+                <td style="padding: 12px; text-align: center; color: #1d1d1f; font-weight: 500;">${s.firstName} ${s.lastName}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">มี</span>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <button class="btn btn-primary btn-select-student" style="padding: 5px 16px; font-size: 12px; border-radius: 8px; background: #0071e3; border: none; color: white; cursor: pointer; font-weight: 600;" data-id="${s.id}">เลือก</button>
                 </td>
             `;
 
@@ -303,12 +385,33 @@ const StudentPortal = {
         document.getElementById('student-dash-greeting').innerText = `${user.firstName} ${user.lastName}`;
         const infoEl = document.getElementById('student-dash-info');
         if (infoEl) {
-            infoEl.innerText = `ชั้นปี ${user.year} ห้อง ${user.room}`;
+            infoEl.innerText = `ชั้นปี ${user.year.toString().split(' ')[0]} ห้อง ${user.room}`;
         }
 
         const subjects = Store.getSubjects();
-        const availableSubs = subjects.filter(s => s.year === user.year);
+
+        // Helper: extract year level and academic year from a year string
+        // e.g. "1 (ปี 1/2567)" or "1 (ปี 2567)" → { level: "1", acadYear: "2567" }
+        const parseYear = (yearStr) => {
+            if (!yearStr) return { level: '', acadYear: '' };
+            const str = yearStr.toString();
+            const level = str.split(' ')[0];
+            // New format: (ปี 1/2567) or (ปี 2/2567)
+            const matchNew = str.match(/\(ปี\s*\d+\/(\d+)\)/);
+            if (matchNew) return { level, acadYear: matchNew[1] };
+            // Old format: (ปี 2567)
+            const matchOld = str.match(/\(ปี\s*(\d+)\)/);
+            if (matchOld) return { level, acadYear: matchOld[1] };
+            return { level, acadYear: '' };
+        };
+
+        const userParsed = parseYear(user.year);
+        const availableSubs = subjects.filter(s => {
+            const subParsed = parseYear(s.year);
+            return subParsed.level === userParsed.level && subParsed.acadYear === userParsed.acadYear;
+        });
         // Kept in chronological order from Store
+
         
         const containerEl = document.getElementById('student-exams-container');
         if (!containerEl) return;
@@ -381,14 +484,17 @@ const StudentPortal = {
         const otherSubs = [];
 
         availableSubs.forEach(sub => {
-            const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
-            if (termMatch) {
-                if (termMatch[1] === '1') term1Subs.push(sub);
-                else if (termMatch[1] === '2') term2Subs.push(sub);
-                else otherSubs.push(sub);
-            } else {
-                otherSubs.push(sub);
-            }
+            // First try to get term from name (legacy) then from year (new format)
+            let term = null;
+            const termMatchName = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+            const termMatchYear = sub.year ? sub.year.toString().match(/\(ปี\s*(\d+)\//) : null;
+            
+            if (termMatchYear) term = termMatchYear[1];
+            else if (termMatchName) term = termMatchName[1];
+
+            if (term === '1') term1Subs.push(sub);
+            else if (term === '2') term2Subs.push(sub);
+            else otherSubs.push(sub);
         });
 
         const renderGroupCard = (title, subs) => {
@@ -421,9 +527,24 @@ const StudentPortal = {
             containerEl.appendChild(card);
         };
 
-        renderGroupCard('วิชาเทอม 1', term1Subs);
-        renderGroupCard('วิชาเทอม 2', term2Subs);
-        renderGroupCard('วิชาอื่นๆ', otherSubs);
+        // Build title with academic year extracted from first subject in each group
+        const getAcadYear = (subs) => {
+            if (subs.length === 0) return '';
+            const sub = subs[0];
+            // New format: "1 (ปี 1/2567)" → extract "2567"
+            const matchNew = sub.year ? sub.year.toString().match(/\(ปี\s*\d+\/(\d+)\)/) : null;
+            if (matchNew) return '/' + matchNew[1];
+            // Fallback: "1 (ปี 2567)" → extract "2567"
+            const matchOld = sub.year ? sub.year.toString().match(/\(ปี\s*(\d+)\)/) : null;
+            if (matchOld) return '/' + matchOld[1];
+            return '';
+        };
+
+        renderGroupCard(`1${getAcadYear(term1Subs)}`, term1Subs);
+        renderGroupCard(`2${getAcadYear(term2Subs)}`, term2Subs);
+        renderGroupCard('อื่นๆ', otherSubs);
+
+
 
         document.querySelectorAll('.btn-take-exam').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -454,7 +575,12 @@ const StudentPortal = {
         const sub = Store.getSubjects().find(s => s.id === subjectId);
         const headerTitle = document.getElementById('exam-header-title');
         if (headerTitle) {
-            headerTitle.innerText = `วิชา: ${sub.name} (${questions.length} ข้อ)`;
+            let displayName = sub.name;
+            const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+            if (termMatch) {
+                displayName = sub.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
+            }
+            headerTitle.innerText = `วิชา: ${displayName} (${questions.length} ข้อ)`;
         }
         
         this.currentExam = {
@@ -613,7 +739,12 @@ const StudentPortal = {
         }
         
         const sub = Store.getSubjects().find(s => s.id === this.currentExam.subjectId);
-        document.getElementById('result-subject-title').innerText = 'วิชา ' + sub.name;
+        let displayName = sub.name;
+        const termMatch = sub.name.match(/\(เทอม\s+(\d+)\)$/);
+        if (termMatch) {
+            displayName = sub.name.replace(/\s*\(เทอม\s+\d+\)$/, '');
+        }
+        document.getElementById('result-subject-title').innerText = 'วิชา ' + displayName;
         document.getElementById('result-score').innerText = score;
         document.getElementById('result-total').innerText = total;
 

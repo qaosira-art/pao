@@ -30,7 +30,6 @@ const Store = {
 
             // Fetch initial data
             await Promise.all([
-                this.fetchCollection('rooms'),
                 this.fetchCollection('subjects'),
                 this.fetchCollection('students'),
                 this.fetchCollection('exams'),
@@ -113,7 +112,6 @@ const Store = {
         if (window.App && window.App.currentUser) {
             const role = window.App.currentUser.role;
             if (role === 'admin' && window.AdminPortal) {
-                if (colName === 'rooms') window.AdminPortal.renderRooms();
                 if (colName === 'subjects') window.AdminPortal.renderSubjects();
                 if (colName === 'students') window.AdminPortal.renderStudents();
                 if (colName === 'exams') {
@@ -126,45 +124,13 @@ const Store = {
         }
     },
 
-    // Rooms
+    // Rooms (Derived from Students)
     getRooms() {
-        return this.cache.rooms.map(r => r.name); 
+        const rooms = [...new Set(this.cache.students.map(s => s.room))];
+        return rooms.filter(r => r != null && r !== "").sort((a, b) => a.toString().localeCompare(b.toString(), 'th', { numeric: true }));
     },
-    async addRoom(name) {
-        if(!this.isReady) return { success: false, error: 'Store not initialized' };
-        const exists = this.cache.rooms.find(r => r.name === name);
-        if (exists) return { success: false, error: 'duplicate' };
-        
-        const tempId = crypto.randomUUID();
-        const data = { 
-            id: tempId, 
-            name,
-            created_at: new Date().toISOString() 
-        };
-        this.cache.rooms.push(data);
-
-        const { error } = await this.supabase.from('rooms').insert([data]);
-        if (error) {
-            console.error("Supabase addRoom error:", error);
-            this.cache.rooms = this.cache.rooms.filter(r => r.id !== tempId);
-            return { success: false, error: error.message };
-        }
-        return { success: true };
-    },
-    async deleteRoom(name) {
-        const roomIndex = this.cache.rooms.findIndex(r => r.name === name);
-        if (roomIndex > -1) {
-            const roomId = this.cache.rooms[roomIndex].id;
-            const removed = this.cache.rooms.splice(roomIndex, 1);
-            const { error } = await this.supabase.from('rooms').delete().eq('id', roomId);
-            if (error) {
-                console.error("Supabase deleteRoom error:", error);
-                this.cache.rooms.splice(roomIndex, 0, ...removed);
-                return false;
-            }
-        }
-        return true;
-    },
+    async addRoom(name) { return { success: true }; },
+    async deleteRoom(name) { return true; },
 
     // Subjects
     getSubjects() { return this.cache.subjects; },

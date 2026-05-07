@@ -89,6 +89,7 @@ const Store = {
         if (window.App && window.App.currentUser) {
             const role = window.App.currentUser.role;
             if (role === 'admin' && window.AdminPortal) {
+                window.AdminPortal.loadFilters(); // Ensure filters are updated
                 if (colName === 'rooms') window.AdminPortal.renderRooms();
                 if (colName === 'subjects') window.AdminPortal.renderSubjects();
                 if (colName === 'students') {
@@ -184,6 +185,23 @@ const Store = {
         }
         return true;
     },
+    async deleteAllSubjects() {
+        const allIds = this.cache.subjects.map(s => s.id);
+        const oldCache = [...this.cache.subjects];
+        this.cache.subjects = [];
+        if(allIds.length > 0) {
+            const { error } = await this.supabase.from('subjects').delete().in('id', allIds);
+            if (error) {
+                console.error("Supabase deleteAllSubjects error:", error);
+                this.cache.subjects = oldCache;
+                return false;
+            }
+            // Also delete all exams
+            const { error: exError } = await this.supabase.from('exams').delete().in('subjectId', allIds);
+            if (exError) console.error("Error deleting linked exams:", exError);
+        }
+        return true;
+    },
 
     // Students
     getStudents() { return this.cache.students; },
@@ -262,7 +280,7 @@ const Store = {
     getExamsBySubject(subjectId) {
         return this.cache.exams.filter(e => e.subjectId === subjectId);
     },
-    async addExamQuestion(subjectId, questionText, choices, correctIndex) {
+    async addExamQuestion(subjectId, questionText, choices, correctIndex, imageUrl = null) {
         if(!this.isReady) return { success: false, error: 'Store not initialized' };
         const tempId = crypto.randomUUID();
         const data = {
@@ -271,6 +289,7 @@ const Store = {
             questionText: questionText,
             choices: choices,
             correctIndex: parseInt(correctIndex)
+            // imageUrl omitted as it doesn't exist in DB schema yet
         };
         this.cache.exams.push(data);
         const { error } = await this.supabase.from('exams').insert([data]);
@@ -286,14 +305,17 @@ const Store = {
         if (index > -1) {
             const old = { ...this.cache.exams[index] };
             this.cache.exams[index] = { ...this.cache.exams[index], ...updates };
-            const { error } = await this.supabase.from('exams').update(updates).eq('id', id);
+            const dbUpdates = { ...updates };
+            delete dbUpdates.imageUrl; // Avoid schema error as column doesn't exist
+            
+            const { error } = await this.supabase.from('exams').update(dbUpdates).eq('id', id);
             if (error) {
                 console.error("Supabase updateExamQuestion error:", error);
                 this.cache.exams[index] = old;
-                return false;
+                return { success: false, error: error.message };
             }
         }
-        return true;
+        return { success: true };
     },
     async deleteExamQuestion(id) {
         const index = this.cache.exams.findIndex(e => e.id === id);

@@ -169,6 +169,11 @@ h1, h2, h3, h4 {
     margin: 0 auto;
     padding-top: 40px;
 }
+
+/* Admin view matches student portal width */
+#view-admin {
+    max-width: 800px;
+}
 #app { padding: 0; } /* Remove container padding for true edge-to-edge */
 
 @keyframes fadeIn {
@@ -214,62 +219,65 @@ h1, h2, h3, h4 {
 .flex-inline { display: flex; gap: 10px; align-items: center; }
 .flex-inline-vertical { display: flex; gap: 10px; align-items: center; }
 
-/* Admin Panel */
+/* Admin Panel (New Full-Width Segmented Layout) */
 .admin-layout { 
-    display: flex; 
-    gap: 30px; 
-    flex-wrap: nowrap; /* Desktop: Prevent wrapping below sidebar */
-    align-items: flex-start;
+    width: 100%;
+    margin-top: 20px;
 }
-.admin-content { flex: 1; min-width: 0; } /* Allow content to shrink if needed */
-.admin-sidebar { 
-    width: 200px; 
-    flex-shrink: 0; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: flex-start; 
-    border-right: 1px solid #e5e5ea; 
-    padding-right: 20px;
-    
-    /* Make sidebar sticky */
-    position: -webkit-sticky;
-    position: sticky;
-    top: 80px; /* Offset from header + extra space */
-    z-index: 100;
-    align-self: flex-start;
+.admin-content { 
+    width: 100%;
+}
+
+/* Segmented Control (Pill-style) */
+.segmented-control {
+    display: inline-flex;
+    background: #f2f2f7;
+    padding: 4px;
+    border-radius: 16px;
+    gap: 4px;
+}
+.segmented-item {
+    border: none;
+    background: none;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.segmented-item:hover:not(.active) {
+    background: rgba(0,0,0,0.05);
+}
+.segmented-item.active {
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04);
+    font-weight: 700;
+    color: var(--apple-blue);
+}
+.segmented-item svg {
+    opacity: 0.7;
+}
+.segmented-item.active svg {
+    opacity: 1;
 }
 
 @media (max-width: 768px) {
-    .admin-layout { flex-direction: column; gap: 20px; }
-    .admin-sidebar { 
-        width: 100%; 
-        border-right: none; 
-        border-bottom: 1px solid #e5e5ea; 
-        padding-right: 0; 
-        padding-bottom: 20px;
+    .segmented-control {
+        width: 92%;
+        margin: 0 auto;
+    }
+    .segmented-item {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 12px;
+        font-size: 13px;
     }
 }
-.admin-menu { list-style: none; }
-.admin-menu-item {
-    padding: 12px 16px; margin-bottom: 4px; border-radius: 4px;
-    cursor: pointer; font-size: 14px; color: #1d1d1f; font-weight: 500; transition: all 0.2s;
-    display: flex; align-items: center;
-}
-.admin-menu-item::before {
-    content: ''; margin-right: 12px; width: 16px; height: 16px; 
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>');
-    background-size: contain; background-repeat: no-repeat; opacity: 0.5;
-}
-.admin-menu-item[data-target="admin-students"]::before { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>'); }
-.admin-menu-item[data-target="admin-rooms"]::before { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>'); }
-.admin-menu-item[data-target="admin-exams"]::before { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>'); }
-.admin-menu-item[data-target="admin-promotion"]::before { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M17 8l2-2 2 2"></path><path d="M19 12V6"></path></svg>'); }
-.admin-menu-item[data-target="admin-subjects"]::before { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%231d1d1f" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>'); }
-
-.admin-menu-item:hover { background: #f5f5f7; }
-.admin-menu-item.active { background: #f0f7ff; color: var(--apple-blue); border-left: 3px solid var(--apple-blue); border-radius: 0 8px 8px 0; padding-left: 13px; font-weight: 600; }
-.admin-menu-item.active::before { filter: invert(41%) sepia(85%) saturate(3620%) hue-rotate(193deg) brightness(99%) contrast(106%); opacity: 1; }
-.admin-content { flex-grow: 1; }
 
 /* Tables */
 .data-table {
@@ -279,15 +287,38 @@ h1, h2, h3, h4 {
 .data-table th { font-weight: 500; color: var(--apple-gray); border-bottom: 2px solid #e5e5ea; }
 .data-table tr:hover { background-color: var(--apple-light-gray); }
 
-/* Modals */
+/* Modal Overlay */
 .modal {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0,0,0,0.4);
-    display: flex; align-items: center; justify-content: center; z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+.modal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
 }
 .modal-content {
-    background: white; padding: 24px; border-radius: 16px; width: 400px;
-    text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal:not(.hidden) .modal-content {
+    transform: scale(1);
 }
 .modal-actions { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
 
@@ -363,6 +394,8 @@ h1, h2, h3, h4 {
     font-size: 14px;
     appearance: auto;
     color: #1d1d1f;
+    text-align: center;
+    text-align-last: center;
 }
 .filter-search {
     flex: 1; /* Occupies 1 unit of space */
@@ -575,6 +608,26 @@ h1, h2, h3, h4 {
     #advisor-data-table th:nth-child(2), #advisor-data-table td:nth-child(2) { width: 48px; } /* ห้อง */
     #advisor-data-table th:nth-child(4), #advisor-data-table td:nth-child(4) { width: 65px; } /* สิทธิ์ */
     #advisor-data-table th:nth-child(5), #advisor-data-table td:nth-child(5) { width: 45px; } /* คะแนน/วิชา */
+
+    /* Academic Table Mobile Refinement */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+    .academic-table {
+        min-width: 500px; /* Force minimum width to trigger scroll instead of squishing */
+    }
+    .academic-table th, .academic-table td {
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+    }
+    .academic-table td {
+        white-space: normal !important; /* Allow names to wrap if needed */
+        word-break: break-word;
+    }
 }
 
 /* Crop Modal (iOS Look) */
