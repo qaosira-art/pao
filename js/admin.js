@@ -733,7 +733,8 @@ const AdminPortal = {
 
         // Students are kept in chronological order from Store
 
-        document.getElementById('stu-count').innerText = filtered.length;
+        const stuCountEl = document.getElementById('stu-count');
+        if (stuCountEl) stuCountEl.innerText = filtered.length;
 
         const tbody = document.getElementById('student-table-body');
         tbody.innerHTML = '';
