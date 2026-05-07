@@ -500,7 +500,9 @@ const AdminPortal = {
             const acadYears = new Set();
             Store.getSubjects().forEach(s => {
                 const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
-                if (match && match[1]) acadYears.add(match[1]);
+                if (match && match[1]) {
+                    acadYears.add(match[1].split('/').pop());
+                }
             });
             const sortedYears = Array.from(acadYears).sort((a, b) => b - a);
             
@@ -519,8 +521,9 @@ const AdminPortal = {
         // Apply filtering
         if (filterVal) {
             subjects = subjects.filter(s => {
-                const match = s.year ? s.year.toString().match(/\(ปี\s*(\d+)\)/) : null;
-                return match && match[1] === filterVal;
+                const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
+                const acaYearOnly = match ? match[1].split('/').pop() : ''; 
+                return acaYearOnly === filterVal || (match && match[1] === filterVal);
             });
         }
 
@@ -686,7 +689,7 @@ const AdminPortal = {
         students.forEach(s => {
             const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
             if (match && match[1]) {
-                acadYears.add(match[1]);
+                acadYears.add(match[1].split('/').pop());
             }
         });
         const sortedAcadYears = Array.from(acadYears).sort((a, b) => parseInt(b) - parseInt(a));

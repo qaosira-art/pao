@@ -55,7 +55,7 @@ const AdvisorPortal = {
         const acadYearsSet = new Set();
         students.forEach(s => {
             const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
-            if (match && match[1]) acadYearsSet.add(match[1]);
+            if (match && match[1]) acadYearsSet.add(match[1].split('/').pop());
             else if (s.academicYear) acadYearsSet.add(s.academicYear.toString());
         });
         const academicYears = Array.from(acadYearsSet).sort((a, b) => parseInt(b) - parseInt(a));
@@ -106,7 +106,7 @@ const AdvisorPortal = {
         if (selectedAcaYear || selectedYear) {
             filteredStudents = students.filter(s => {
                 const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
-                const acaYear = match ? match[1] : (s.academicYear ? s.academicYear.toString() : '');
+                const acaYear = match ? match[1].split('/').pop() : (s.academicYear ? s.academicYear.toString() : '');
                 const yearLevel = s.year.toString().split(' ')[0];
                 
                 let ok = true;
@@ -149,7 +149,7 @@ const AdvisorPortal = {
         if (selectedAcaYear || selectedYear) {
             filteredSubjects = subjects.filter(s => {
                 const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
-                const acaYear = match ? match[1] : (s.academicYear ? s.academicYear.toString() : '');
+                const acaYear = match ? match[1].split('/').pop() : (s.academicYear ? s.academicYear.toString() : '');
                 const yearLevel = s.year.toString().split(' ')[0];
                 
                 let ok = true;
@@ -202,7 +202,7 @@ const AdvisorPortal = {
         if (fAcaYear) {
             students = students.filter(s => {
                 const match = s.year ? s.year.toString().match(/\(ปี\s*([^)]+)\)/) : null;
-                const acaYear = match ? match[1] : (s.academicYear ? s.academicYear.toString() : '');
+                const acaYear = match ? match[1].split('/').pop() : (s.academicYear ? s.academicYear.toString() : '');
                 return acaYear === fAcaYear;
             });
         }
