@@ -15,11 +15,32 @@ const StudentPortal = {
     },
 
     bindEvents() {
-        // Filter Button
-        const btnOpenFilter = document.getElementById('btn-open-student-filter');
-        if (btnOpenFilter) {
-            btnOpenFilter.addEventListener('click', () => {
-                FilterModal.open('student');
+        // Inline Search & Filters
+        const filterIds = ['stu-filter-name', 'stu-filter-academic-year', 'stu-filter-year', 'stu-filter-room'];
+        filterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const eventType = el.tagName === 'INPUT' ? 'input' : 'change';
+                el.addEventListener(eventType, () => {
+                    this.currentPage = 1;
+                    if (id === 'stu-filter-academic-year' || id === 'stu-filter-year') {
+                        this.updateCascadingFilters();
+                    }
+                    this.renderLoginTable();
+                });
+            }
+        });
+
+        const btnClear = document.getElementById('btn-clear-student-filter');
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                filterIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                this.currentPage = 1;
+                this.loadLoginFilters();
+                this.renderLoginTable();
             });
         }
 
@@ -174,10 +195,6 @@ const StudentPortal = {
                 acaYearSelect.appendChild(opt);
             });
             if (academicYears.includes(currentVal)) acaYearSelect.value = currentVal;
-            
-            acaYearSelect.onchange = () => {
-                this.updateCascadingFilters();
-            };
         }
 
         const yearSelect = document.getElementById('stu-filter-year');
@@ -196,10 +213,6 @@ const StudentPortal = {
                 yearSelect.appendChild(opt);
             });
             if (cleanedGrades.includes(currentYear)) yearSelect.value = currentYear;
-
-            yearSelect.onchange = () => {
-                this.updateCascadingFilters();
-            };
         }
 
         const roomSelect = document.getElementById('stu-filter-room');
@@ -303,7 +316,9 @@ const StudentPortal = {
                 <td style="padding: 12px; text-align: center; color: #1d1d1f;">${s.room}</td>
                 <td style="padding: 12px; text-align: center; color: #1d1d1f; font-weight: 500;">${s.firstName} ${s.lastName}</td>
                 <td style="padding: 12px; text-align: center;">
-                    <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;">มี</span>
+                    ${s.isEligible 
+                        ? `<span style="background: #e3fbed; color: #1e7e46; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">มี</span>`
+                        : `<span style="background: #f5f5f7; color: #6e6e73; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">ไม่มี</span>`}
                 </td>
                 <td style="padding: 12px; text-align: center;">
                     <button class="btn btn-primary btn-select-student" style="padding: 5px 16px; font-size: 12px; border-radius: 8px; background: #0071e3; border: none; color: white; cursor: pointer; font-weight: 600;" data-id="${s.id}">เลือก</button>

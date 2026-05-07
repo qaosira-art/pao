@@ -19,11 +19,33 @@ const AdvisorPortal = {
             });
         }
 
-        // Filter Button
-        const btnOpenFilter = document.getElementById('btn-open-advisor-filter');
-        if (btnOpenFilter) {
-            btnOpenFilter.addEventListener('click', () => {
-                FilterModal.open('advisor');
+        // Inline Search & Filters (Real-time)
+        const filterIds = ['adv-search-student', 'adv-filter-subject', 'adv-filter-academic-year', 'adv-filter-year', 'adv-filter-room'];
+        filterIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const eventType = el.tagName === 'INPUT' ? 'input' : 'change';
+                el.addEventListener(eventType, () => {
+                    this.currentPage = 1;
+                    if (id === 'adv-filter-academic-year' || id === 'adv-filter-year') {
+                        this.updateSubjectDropdown();
+                        this.updateRoomDropdown();
+                    }
+                    this.renderTable();
+                });
+            }
+        });
+
+        const btnClear = document.getElementById('btn-clear-advisor-filter');
+        if (btnClear) {
+            btnClear.addEventListener('click', () => {
+                filterIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                this.currentPage = 1;
+                this.loadFilters();
+                this.renderTable();
             });
         }
     },

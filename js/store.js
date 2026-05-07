@@ -86,10 +86,17 @@ const Store = {
     },
     
     refreshUI(colName) {
-        if (window.App && window.App.currentUser) {
+        if (!window.App) return;
+
+        // Student Login table should always refresh if students change (even if not logged in)
+        if (window.StudentPortal && colName === 'students') {
+            window.StudentPortal.renderLoginTable();
+        }
+
+        if (window.App.currentUser) {
             const role = window.App.currentUser.role;
             if (role === 'admin' && window.AdminPortal) {
-                window.AdminPortal.loadFilters(); // Ensure filters are updated
+                window.AdminPortal.loadFilters(); 
                 if (colName === 'rooms') window.AdminPortal.renderRooms();
                 if (colName === 'subjects') window.AdminPortal.renderSubjects();
                 if (colName === 'students') {
@@ -101,8 +108,11 @@ const Store = {
                     if(el && el.value) window.AdminPortal.renderExams(el.value);
                 }
             }
-            if (role === 'advisor' && window.AdvisorPortal && colName === 'scores') window.AdvisorPortal.renderTable();
-            if (role === 'student' && window.StudentPortal && colName === 'students') window.StudentPortal.renderLoginTable();
+            if (role === 'advisor' && window.AdvisorPortal) {
+                if (colName === 'scores' || colName === 'students') {
+                    window.AdvisorPortal.renderTable();
+                }
+            }
         }
     },
 

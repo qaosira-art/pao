@@ -207,18 +207,15 @@
                         
                         <!-- Bottom: List -->
                         <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; min-height: 450px; display: flex; flex-direction: column; padding: 24px;">
-                            <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-                                <h3 style="margin: 0; font-size: 18px; color: #1d1d1f; font-weight: 700;">รายชื่อทั้งหมด (<span id="stu-count">0</span> คน)</h3>
-                                <div style="position: relative; display: flex; align-items: center; min-width: 150px;">
-                                    <select id="filter-student-acad-year" style="width: 100%; border-radius: 10px; padding: 8px 16px; border: 1px solid #d2d2d7; font-size: 14px; outline: none; background: white; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center; font-weight: 600; cursor: pointer; position: relative; z-index: 1;">
-                                        <option value="" style="text-align: center;">ทุกปีการศึกษา</option>
-                                    </select>
-                                    <div style="position: absolute; right: 12px; pointer-events: none; z-index: 2; display: flex; align-items: center; color: #6e6e73;">
-                                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <div class="inline-filter-bar" style="display: flex; gap: 12px; margin-bottom: 25px; padding: 0; flex-wrap: wrap; justify-content: center; align-items: center;">
+                                <select id="filter-student-acad-year" class="filter-select-inline" style="height: 40px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 13px; min-width: 140px; cursor: pointer;"></select>
+                                <button id="btn-delete-all-students" class="btn" style="background: #ff3b30; color: white; border-radius: 10px; height: 40px; padding: 0 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(255,59,48,0.2);">ลบทั้งหมด</button>
+                                <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+                                    <input type="text" id="search-student" placeholder="ค้นหาชื่อ/ห้อง/ปีการศึกษา..." style="width: 100%; height: 40px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px 0 36px; font-size: 14px; outline: none; transition: all 0.2s;">
+                                    <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #86868b; pointer-events: none;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                     </div>
                                 </div>
-                                <input type="text" id="search-student" placeholder="ค้นหา ปี/ห้อง/ชื่อ" style="border-radius: 10px; padding: 8px 16px; border: 1px solid #d2d2d7; font-size: 14px; outline: none; min-width: 220px;">
-                                <button id="btn-delete-all-students" class="btn" style="background: #ff3b30; color: white; border-radius: 10px; padding: 8px 20px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 4px rgba(255,59,48,0.2);">ลบทั้งหมด</button>
                             </div>
                             
                             <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
@@ -302,18 +299,16 @@
                         </div>
                         
                         <div class="panel" style="border: 1px solid #e5e5ea; box-shadow: none; border-radius: 12px; min-height: 450px; display: flex; flex-direction: column; padding: 24px;">
-                            <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-                                <h3 style="margin: 0; font-size: 18px; color: #1d1d1f; font-weight: 700;">รายวิชาทั้งหมด (<span id="subject-count-display">0</span>)</h3>
-                                <div style="position: relative; display: flex; align-items: center; min-width: 150px;">
-                                    <select id="filter-subject-acad-year" style="width: 100%; border-radius: 10px; padding: 8px 16px; border: 1px solid #d2d2d7; font-size: 14px; outline: none; background: white; appearance: none; -webkit-appearance: none; text-align: center; text-align-last: center; font-weight: 600; cursor: pointer; position: relative; z-index: 1;">
-                                        <option value="" style="text-align: center;">ทุกปีการศึกษา</option>
-                                    </select>
-                                    <div style="position: absolute; right: 12px; pointer-events: none; z-index: 2; display: flex; align-items: center; color: #6e6e73;">
-                                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <div class="inline-filter-bar" style="display: flex; gap: 12px; margin-bottom: 24px; padding: 0; flex-wrap: wrap; justify-content: center; align-items: center;">
+                                <h3 style="margin: 0; font-size: 17px; color: #1d1d1f; font-weight: 700; margin-right: auto;">รายวิชาทั้งหมด (<span id="subject-count-display">0</span>)</h3>
+                                <select id="filter-subject-acad-year" class="filter-select-inline" style="height: 40px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 13px; min-width: 140px; cursor: pointer;"></select>
+                                <button id="btn-delete-all-subjects" class="btn" style="background: #ff3b30; color: white; border-radius: 10px; height: 40px; padding: 0 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(255,59,48,0.2);">ลบทั้งหมด</button>
+                                <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+                                    <input type="text" id="search-subject" placeholder="ค้นหาชื่อวิชา/ปี..." style="width: 100%; height: 40px; border-radius: 10px; border: 1px solid #d2d2d7; padding: 0 12px 0 36px; font-size: 14px; outline: none; transition: all 0.2s;">
+                                    <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #86868b; pointer-events: none;">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                     </div>
                                 </div>
-                                <input type="text" id="search-subject" placeholder="ค้นหา ชื่อวิชา/ปี" style="border-radius: 10px; padding: 8px 16px; border: 1px solid #d2d2d7; font-size: 14px; outline: none; min-width: 220px;">
-                                <button id="btn-delete-all-subjects" class="btn" style="background: #ff3b30; color: white; border-radius: 10px; padding: 8px 20px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 4px rgba(255,59,48,0.2);">ลบทั้งหมด</button>
                             </div>
                             <style>
                                 .academic-table {
@@ -476,11 +471,17 @@
             
             <div class="panel student-login-card">
                 <!-- New Single Button Filter System -->
-                <div style="display: flex; justify-content: center; margin-bottom: 25px; padding: 0 16px;">
-                    <button id="btn-open-student-filter" class="btn" style="width: 100%; max-width: 500px; height: 50px; border-radius: 25px; background: white; border: 1.5px solid #d2d2d7; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; color: #1d1d1f; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.05); pointer-events: auto;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        ค้นหาและกรองข้อมูลนักเรียน
-                    </button>
+                <!-- Modern Inline Filter Bar -->
+                <div class="inline-filter-bar" style="display: flex; gap: 12px; margin-bottom: 25px; padding: 0 16px; flex-wrap: wrap; justify-content: center;">
+                    <select id="stu-filter-academic-year" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 120px; cursor: pointer;"></select>
+                    <select id="stu-filter-year" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 100px; cursor: pointer;"></select>
+                    <select id="stu-filter-room" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 100px; cursor: pointer;"></select>
+                    <div style="position: relative; flex: 1; min-width: 250px; max-width: 400px;">
+                        <input type="text" id="stu-filter-name" placeholder="ค้นหาชื่อนักเรียน..." style="width: 100%; height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 16px 0 40px; font-size: 15px; background: #fff; outline: none; transition: all 0.2s;">
+                        <div style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #86868b; pointer-events: none;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                    </div>
                 </div>
                 
                 <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
@@ -645,11 +646,18 @@
             
             <div class="panel student-login-card" style="padding: 24px; border: 1px solid #e5e5ea; border-radius: 20px;">
                 <!-- New Single Button Filter System -->
-                <div style="display: flex; justify-content: center; margin-bottom: 25px;">
-                    <button id="btn-open-advisor-filter" class="btn" style="width: 100%; max-width: 500px; height: 50px; border-radius: 25px; background: white; border: 1.5px solid #d2d2d7; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; color: #1d1d1f; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.05); pointer-events: auto;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        ค้นหาและกรองคะแนนที่ปรึกษา
-                    </button>
+                <!-- Modern Inline Filter Bar (Advisor) -->
+                <div class="inline-filter-bar" style="display: flex; gap: 12px; margin-bottom: 25px; padding: 0; flex-wrap: wrap; justify-content: center;">
+                    <select id="adv-filter-subject" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1.5px solid var(--apple-blue); padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 180px; cursor: pointer; color: var(--apple-blue); font-weight: 600;"></select>
+                    <select id="adv-filter-academic-year" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 110px; cursor: pointer;"></select>
+                    <select id="adv-filter-year" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 90px; cursor: pointer;"></select>
+                    <select id="adv-filter-room" class="filter-select-inline" style="height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 12px; font-size: 14px; background: #fff; outline: none; min-width: 90px; cursor: pointer;"></select>
+                    <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+                        <input type="text" id="adv-search-student" placeholder="ค้นหาชื่อนักเรียน..." style="width: 100%; height: 44px; border-radius: 12px; border: 1px solid #d2d2d7; padding: 0 16px 0 40px; font-size: 15px; background: #fff; outline: none; transition: all 0.2s;">
+                        <div style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #86868b; pointer-events: none;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                    </div>
                 </div>
                 
                 <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
