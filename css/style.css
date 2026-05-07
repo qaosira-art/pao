@@ -700,22 +700,28 @@ h1, h2, h3, h4 {
 
 @media (max-width: 768px) {
     .student-dash-banner {
-        padding: 30px 20px;
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
+        padding: 18px 20px;
+        flex-direction: row;
+        text-align: left;
+        gap: 14px;
     }
     .student-dash-banner-content {
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: row;
+        gap: 14px;
+    }
+    .student-dash-banner-content h2 {
+        font-size: 18px !important;
+    }
+    .student-dash-banner-content > div > div {
+        font-size: 13px !important;
     }
     .animated-sailboat-container {
-        width: 100px;
-        height: 100px;
-        right: 50%;
-        transform: translateX(50%);
-        bottom: -20px; /* Lowered for submerged look */
-        opacity: 0.15;
+        width: 110px;
+        height: 110px;
+        right: 16px;
+        transform: none;
+        bottom: -4px;
+        opacity: 1;
     }
 }
 
